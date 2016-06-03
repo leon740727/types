@@ -130,3 +130,43 @@ export class IO<T> {
         return o.exec();
     }
 }
+
+function _arity(n, fn) {
+    /* eslint-disable no-unused-vars */
+    switch (n) {
+        case 0: return function() { return fn.apply(this, arguments); };
+        case 1: return function(a0) { return fn.apply(this, arguments); };
+        case 2: return function(a0, a1) { return fn.apply(this, arguments); };
+        case 3: return function(a0, a1, a2) { return fn.apply(this, arguments); };
+        case 4: return function(a0, a1, a2, a3) { return fn.apply(this, arguments); };
+        case 5: return function(a0, a1, a2, a3, a4) { return fn.apply(this, arguments); };
+        case 6: return function(a0, a1, a2, a3, a4, a5) { return fn.apply(this, arguments); };
+        case 7: return function(a0, a1, a2, a3, a4, a5, a6) { return fn.apply(this, arguments); };
+        case 8: return function(a0, a1, a2, a3, a4, a5, a6, a7) { return fn.apply(this, arguments); };
+        case 9: return function(a0, a1, a2, a3, a4, a5, a6, a7, a8) { return fn.apply(this, arguments); };
+        case 10: return function(a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) { return fn.apply(this, arguments); };
+        default: throw new Error('First argument to _arity must be a non-negative integer no greater than ten');
+    }
+};
+function curry(func: (...args)=>any) {
+    return (...args) => {
+        if (args.length >= func.length) {
+            return func.apply(null, args);
+        } else {
+            let newf = (...arg2s) => func.apply(null, args.concat(arg2s));
+            return curry(_arity(func.length - args.length, newf));
+        }
+    }
+}
+
+/**
+參考 https://llh911001.gitbooks.io/mostly-adequate-guide-chinese/content/ch10.html
+ */
+export function liftA2<A,B,C>(fun:(a:A, b:B)=>C, a, b) {
+    let f = <(a:A)=>(b:B)=>C> curry(fun);
+    return a.chain(a => b.map(f(a)));
+}
+export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a, b, c) {
+    let f = <(a:A,b:B)=>(c:C)=>D> curry(fun);
+    return liftA2(f,a,b).chain(r => c.map(r));
+}
