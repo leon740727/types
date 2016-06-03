@@ -42,35 +42,49 @@ export class Optional<T> {
     }
 }
 
-export class Result<T, E> {
+export class Result<E, T> {
+    ok: boolean;
     private value: T;
     private error: E;
-    constructor(value: T, error: E) {
+    constructor(ok: boolean, error: E, value: T) {
+        this.ok = ok;
         this.value = value;
         this.error = error;
     }
-
-    static of<T, E>(v: T) {
-        _assert(v != null, "NULL ERROR!!");
-        return new Result(v, null);
+    static ok<E,T>(v: T) {
+        return new Result(true, null, v);
     }
-    static ofError<T, E>(e: E) {
-        _assert(e != null, "NULL ERROR!");
-        return new Result(null, e);
+    static fail<E,T>(e: E) {
+        return new Result(false, e, null);
     }
-    ok() {
-        return this.value != null;
+    map<R>(f:(v:T)=>R): Result<E,R> {
+        if (this.ok) {
+            return Result.ok(f(this.value));
+        } else {
+            return Result.fail(this.error);
+        }
     }
-    fail() {
-        return this.error != null;
+    chain<R>(f:(v:T)=>Result<E,R>): Result<E,R> {
+        if (this.ok) {
+            return f(this.value);
+        } else {
+            return Result.fail(this.error);
+        }
     }
     get() {
-        _assert(this.ok(), "Result 不 ok");
+        _assert(this.ok, "Result 不 ok");
         return this.value;
     }
     get_error() {
-        _assert(this.fail(), "Result 不 fail");
+        _assert(!this.ok, "Result 不 fail");
         return this.error;
+    }
+    either<R>(f:(e:E)=>R, g:(v:T)=>R): R {
+        if (this.ok) {
+            return g(this.value);
+        } else {
+            return f(this.error);
+        }
     }
 }
 
