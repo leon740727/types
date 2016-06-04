@@ -13,25 +13,20 @@ export class Optional<T> {
     }
 
     static of<U>(v: U) {
-        _assert(v != null, "NULL ERROR!!");
+        /** 可傳入 v:U 或 null 或 undefined */
         return new Optional<U>(v);
     }
     static empty() {
         return new Optional(null);
     }
-    static of_nullable<U>(v: U): Optional<U> {
-        /** 可傳入 v:U 或 null 或 undefined */
-        // null 跟 undefined 會自動互轉
-        return v == null ? Optional.empty() : Optional.of(v);
-    }
     is_present() {
-        return this.value != null;
+        return this.value !== null && this.value !== undefined;
     }
     get(): T {
-        _assert(this.value != null, "NULL ERROR!!");
+        _assert(this.is_present(), "NULL ERROR!!");
         return this.value;
     }
-    or_else(others): T {
+    or_else(others: T) {
         return this.is_present() ? this.value : others;
     }
     map<R>(f: (a: T) => R): Optional<R> {
