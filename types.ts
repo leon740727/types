@@ -157,11 +157,19 @@ function curry(func: (...args)=>any) {
 /**
 參考 https://llh911001.gitbooks.io/mostly-adequate-guide-chinese/content/ch10.html
  */
+export function liftA2<A,B,C>(fun:(a:A, b:B)=>C, a:Optional<A>, b:Optional<B>): Optional<C>;
+export function liftA2<A,B,C,E>(fun:(a:A, b:B)=>C, a:Result<E,A>, b:Result<E,B>): Result<E,C>;
+export function liftA2<A,B,C>(fun:(a:A, b:B)=>C, a:List<A>, b:List<B>): List<C>;
+export function liftA2<A,B,C>(fun:(a:A, b:B)=>C, a:IO<A>, b:IO<B>): IO<C>;
 export function liftA2<A,B,C>(fun:(a:A, b:B)=>C, a, b) {
     let f = <(a:A)=>(b:B)=>C> curry(fun);
     return a.chain(a => b.map(f(a)));
 }
+export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a:Optional<A>, b:Optional<B>, c:Optional<C>):Optional<D>;
+export function liftA3<A,B,C,D,E>(fun:(a:A, b:B, c:C)=>D, a:Result<E,A>, b:Result<E,B>, c:Result<E,C>):Result<E,D>;
+export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a:List<A>, b:List<B>, c:List<C>):List<D>;
+export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a:IO<A>, b:IO<B>, c:IO<C>):IO<D>;
 export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a, b, c) {
     let f = <(a:A,b:B)=>(c:C)=>D> curry(fun);
-    return liftA2(f,a,b).chain(r => c.map(r));
+    return (<any>liftA2(f,a,b)).chain(r => c.map(r));
 }
