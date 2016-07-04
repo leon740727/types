@@ -173,3 +173,11 @@ export function liftA3<A,B,C,D>(fun:(a:A, b:B, c:C)=>D, a, b, c) {
     let f = <(a:A,b:B)=>(c:C)=>D> curry(fun);
     return (<any>liftA2(f,a,b)).chain(r => c.map(r));
 }
+export function liftA4<A,B,C,D,E>(fun:(a:A, b:B, c:C, d:D)=>E, a:Optional<A>, b:Optional<B>, c:Optional<C>, d: Optional<D>):Optional<E>;
+export function liftA4<A,B,C,D,E,F>(fun:(a:A, b:B, c:C, d:D)=>E, a:Result<F,A>, b:Result<F,B>, c:Result<F,C>, d:Result<F,D>):Result<F,E>;
+export function liftA4<A,B,C,D,E>(fun:(a:A, b:B, c:C, d:D)=>E, a:List<A>, b:List<B>, c:List<C>, d: Optional<D>):List<E>;
+export function liftA4<A,B,C,D,E>(fun:(a:A, b:B, c:C, d:D)=>E, a:IO<A>, b:IO<B>, c:IO<C>, d: Optional<D>):IO<E>;
+export function liftA4<A,B,C,D,E>(fun:(a:A, b:B, c:C, d:D)=>E, a, b, c, d) {
+    let f = <(a:A,b:B,c:C)=>(d:D)=>E> curry(fun);
+    return (<any>liftA3(f,a,b,c)).chain(r => d.map(r));
+}
