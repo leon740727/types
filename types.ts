@@ -19,6 +19,12 @@ export class Optional<T> {
     static empty() {
         return new Optional(null);
     }
+    jsonable(transformer: (data: T) => Jsonable): Jsonable {
+        return this.value == null ? null : transformer(this.value);
+    }
+    static restore<T>(data: Jsonable, transformer: (data: Jsonable) => T): Optional<T> {
+        return Optional.of(data).map(transformer);
+    }
     is_present() {
         return this.value !== null && this.value !== undefined;
     }
@@ -51,6 +57,20 @@ export class Result<E, T> {
     }
     static fail<E,T>(e: E) {
         return new Result(false, e, null);
+    }
+    jsonable(errorT: (error: E) => Jsonable, valueT: (data: T) => Jsonable): Jsonable {
+        if (this.ok) {
+            return [null, valueT(this.value)];
+        } else {
+            return [errorT(this.error), null];
+        }
+    }
+    static restore<E, T>(data: Jsonable, errorT: (error: Jsonable) => E, valueT: (data: Jsonable) => T): Result<E, T> {
+        if (data[0] === null) {
+            return Result.ok(valueT(data[1]));
+        } else {
+            return Result.fail(errorT(data[0]));
+        }
     }
     map<R>(f:(v:T)=>R): Result<E,R> {
         if (this.ok) {
