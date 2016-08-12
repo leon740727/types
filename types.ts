@@ -126,6 +126,54 @@ export class IO<T> {
     }
 }
 
+export function makePromise<T>(data: T) {
+    return new Promise<T>((resolve, reject) => resolve(data));
+}
+
+export class PromiseOptional<T> {
+    data: Promise<Optional<T>>;
+    constructor(data: Promise<Optional<T>>) {
+        this.data = data;
+    }
+    static make<T>(data: Promise<Optional<T>>) {
+        return new PromiseOptional(data);
+    }
+    map<R>(f: (p: T) => R): PromiseOptional<R> {
+        return new PromiseOptional(this.data.then(d => d.map(f)));
+    }
+    chain<R>(f: (p: T) => PromiseOptional<R>): PromiseOptional<R> {
+        let res = this.data.then(d =>
+            d.map(d => f(d).data).or_else(makePromise(Optional.empty())));
+        return new PromiseOptional(res);
+    }
+    or_else<T>(other: T): Promise<T> {
+        return this.data.then(d => d.is_present() ? d.get() : other);
+    }
+}
+
+export class PromiseResult<E, T> {
+    data: Promise<Result<E, T>>;
+    constructor(data: Promise<Result<E, T>>) {
+        this.data = data;
+    }
+    static make<E, T>(data: Promise<Result<E, T>>) {
+        return new PromiseResult(data);
+    }
+    map<R>(f: (p: T) => R): PromiseResult<E, R> {
+        return new PromiseResult(this.data.then(d => d.map(f)));
+    }
+    chain<R>(f: (p: T) => PromiseResult<E, R>): PromiseResult<E, R> {
+        let res = this.data.then(d =>
+            d.map(d => f(d).data).either(
+                err => makePromise(<Result<E,R>>Result.fail(err)),
+                data => data));
+        return new PromiseResult(res);
+    }
+    either<R>(f:(e:E)=>R, g:(v:T)=>R): Promise<R> {
+        return this.data.then(r => r.either(f, g));
+    }
+}
+
 function _arity(n, fn) {
     /* eslint-disable no-unused-vars */
     switch (n) {
