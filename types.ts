@@ -178,9 +178,20 @@ export class PromiseOptional<T> {
     map<R>(f: (p: T) => R): PromiseOptional<R> {
         return new PromiseOptional(this.data.then(d => d.map(f)));
     }
-    chain<R>(f: (p: T) => PromiseOptional<R>): PromiseOptional<R> {
+    chain<R>(f: (p: T) => PromiseOptional<R>): PromiseOptional<R>;
+    chain<R>(f: (p: T) => Promise<Optional<R>>): PromiseOptional<R>;
+    chain<R>(f: (p: T) => any): PromiseOptional<R> {
+        function mapper(p: T): Promise<Optional<R>> {
+            let res = f(p);
+            if (res instanceof PromiseOptional) {
+                return res.data;
+            } else {
+                return res;
+            }
+        }
         let res = this.data.then(d =>
-            d.map(d => f(d).data).or_else(makePromise(Optional.empty())));
+            d.map(mapper)
+             .or_else(makePromise(Optional.empty())));
         return new PromiseOptional(res);
     }
     or_else(other: T): Promise<T> {
@@ -199,9 +210,19 @@ export class PromiseResult<E, T> {
     map<R>(f: (p: T) => R): PromiseResult<E, R> {
         return new PromiseResult(this.data.then(d => d.map(f)));
     }
-    chain<R>(f: (p: T) => PromiseResult<E, R>): PromiseResult<E, R> {
+    chain<R>(f: (p: T) => PromiseResult<E, R>): PromiseResult<E, R>;
+    chain<R>(f: (p: T) => Promise<Result<E, R>>): PromiseResult<E, R>
+    chain<R>(f: (p: T) => any): PromiseResult<E, R> {
+        function mapper(p: T): Promise<Result<E, R>> {
+            let res = f(p);
+            if (res instanceof PromiseResult) {
+                return res.data;
+            } else {
+                return res;
+            }
+        }
         let res = this.data.then(d =>
-            d.map(d => f(d).data).either(
+            d.map(mapper).either(
                 err => makePromise(<Result<E,R>>Result.fail(err)),
                 data => data));
         return new PromiseResult(res);
