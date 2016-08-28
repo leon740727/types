@@ -35,11 +35,21 @@ export class Optional<T> {
     or_else(others: T) {
         return this.is_present() ? this.value : others;
     }
+    or_exec(func: () => T) {
+        // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
+        // 例如: doc.or_else(load_default()) 不論 doc 是否有值，load_default 都會執行
+        // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
+        return this.is_present() ? this.value : func();
+    }
     map<R>(f: (a: T) => R): Optional<R> {
         return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
     }
     chain<R>(f: (a: T) => Optional<R>): Optional<R> {
         return this.is_present() ? f(this.value) : Optional.empty();
+    }
+
+    static cat<T>(list: Optional<T>[]): T[] {
+        return list.filter(i => i.is_present()).map(i => i.get());
     }
 }
 
@@ -86,6 +96,9 @@ export class Result<E, T> {
             return Result.fail(this.error);
         }
     }
+    get fail() {
+        return ! this.ok;
+    }
     get() {
         _assert(this.ok, "Result 不 ok");
         return this.value;
@@ -100,6 +113,10 @@ export class Result<E, T> {
         } else {
             return f(this.error);
         }
+    }
+
+    static cat<E,T>(list: Result<E,T>[]): T[] {
+        return list.filter(r => r.ok).map(r => r.get());
     }
 }
 
