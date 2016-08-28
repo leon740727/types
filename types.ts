@@ -183,7 +183,7 @@ export class PromiseOptional<T> {
             d.map(d => f(d).data).or_else(makePromise(Optional.empty())));
         return new PromiseOptional(res);
     }
-    or_else<T>(other: T): Promise<T> {
+    or_else(other: T): Promise<T> {
         return this.data.then(d => d.is_present() ? d.get() : other);
     }
 }
