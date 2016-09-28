@@ -44,6 +44,11 @@ export class Optional<T> {
     map<R>(f: (a: T) => R): Optional<R> {
         return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
     }
+    if_present<R>(f: (a: T) => R): Optional<R> {
+        // something.if_present 跟 something.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.is_present()) { xxx.get() } 的程式碼
+        return this.map(f);
+    }
     chain<R>(f: (a: T) => Optional<R>): Optional<R> {
         return this.is_present() ? f(this.value) : Optional.empty();
     }
@@ -94,6 +99,18 @@ export class Result<E, T> {
             return f(this.value);
         } else {
             return Result.fail(this.error);
+        }
+    }
+    if_ok<R>(f:(v:T)=>R): Result<E,R> {
+        // result.if_ok 跟 result.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.ok) { xxx.get() } 的程式碼
+        return this.map(f);
+    }
+    if_error<R>(f:(v:E)=>R): Result<R,T> {
+        if (this.ok) {
+            return Result.ok(this.value);
+        } else {
+            return Result.fail(f(this.error));
         }
     }
     get fail() {
