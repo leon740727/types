@@ -41,6 +41,9 @@ export class Optional<T> {
         // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
         return this.is_present() ? this.value : func();
     }
+    or_fail<E>(error: E): Result<E, T> {
+        return this.is_present() ? Result.ok(this.value) : Result.fail(error);
+    }
     map<R>(f: (a: T) => R): Optional<R> {
         return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
     }
