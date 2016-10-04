@@ -217,6 +217,9 @@ export class PromiseOptional<T> {
     or_else(other: T): Promise<T> {
         return this.data.then(d => d.is_present() ? d.get() : other);
     }
+    or_fail<E>(error: E): PromiseResult<E, T> {
+        return PromiseResult.make(this.map(data => Result.ok(data)).or_else(Result.fail(error)));
+    }
 }
 
 export class PromiseResult<E, T> {
