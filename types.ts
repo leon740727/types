@@ -192,8 +192,14 @@ export class PromiseOptional<T> {
     constructor(data: Promise<Optional<T>>) {
         this.data = data;
     }
-    static make<T>(data: Promise<Optional<T>>) {
-        return new PromiseOptional(data);
+    static make<T>(data: Optional<T>): PromiseOptional<T>;
+    static make<T>(data: Promise<Optional<T>>): PromiseOptional<T>;
+    static make<T>(data) {
+        if (data instanceof Optional) {
+            return new PromiseOptional(makePromise(data));
+        } else {
+            return new PromiseOptional(data);
+        }
     }
     map<R>(f: (p: T) => R): PromiseOptional<R> {
         return new PromiseOptional(this.data.then(d => d.map(f)));
@@ -227,8 +233,14 @@ export class PromiseResult<E, T> {
     constructor(data: Promise<Result<E, T>>) {
         this.data = data;
     }
-    static make<E, T>(data: Promise<Result<E, T>>) {
-        return new PromiseResult(data);
+    static make<E, T>(data: Result<E, T>): PromiseResult<E, T>;
+    static make<E, T>(data: Promise<Result<E, T>>): PromiseResult<E, T>;
+    static make<E, T>(data) {
+        if (data instanceof Result) {
+            return new PromiseResult(makePromise(data));
+        } else {
+            return new PromiseResult(data);
+        }
     }
     map<R>(f: (p: T) => R): PromiseResult<E, R> {
         return new PromiseResult(this.data.then(d => d.map(f)));
