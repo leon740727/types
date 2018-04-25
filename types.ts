@@ -134,6 +134,9 @@ export class Result<E, T> {
             return f(this.error);
         }
     }
+    or_else(others: T): T {
+        return this.ok ? this.value : others;
+    }
 
     static cat<E,T>(list: Result<E,T>[]): T[] {
         return list.filter(r => r.ok).map(r => r.get());
