@@ -186,10 +186,6 @@ export class IO<T> {
     }
 }
 
-export function makePromise<T>(data: T) {
-    return new Promise<T>((resolve, reject) => resolve(data));
-}
-
 export class PromiseOptional<T> {
     data: Promise<Optional<T>>;
     constructor(data: Promise<Optional<T>>) {
@@ -199,7 +195,7 @@ export class PromiseOptional<T> {
     static make<T>(data: Promise<Optional<T>>): PromiseOptional<T>;
     static make<T>(data) {
         if (data instanceof Optional) {
-            return new PromiseOptional(makePromise(data));
+            return new PromiseOptional(Promise.resolve(data));
         } else {
             return new PromiseOptional(data);
         }
@@ -220,7 +216,7 @@ export class PromiseOptional<T> {
         }
         let res = this.data.then(d =>
             d.map(mapper)
-             .or_else(makePromise(Optional.empty())));
+             .or_else(Promise.resolve(Optional.empty())));
         return new PromiseOptional(res);
     }
     or_else(other: T): Promise<T> {
@@ -240,7 +236,7 @@ export class PromiseResult<E, T> {
     static make<E, T>(data: Promise<Result<E, T>>): PromiseResult<E, T>;
     static make<E, T>(data) {
         if (data instanceof Result) {
-            return new PromiseResult(makePromise(data));
+            return new PromiseResult(Promise.resolve(data));
         } else {
             return new PromiseResult(data);
         }
@@ -261,7 +257,7 @@ export class PromiseResult<E, T> {
         }
         let res = this.data.then(d =>
             d.map(mapper).either(
-                err => makePromise(<Result<E,R>>Result.fail(err)),
+                err => Promise.resolve(<Result<E,R>>Result.fail(err)),
                 data => data));
         return new PromiseResult(res);
     }
