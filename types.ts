@@ -65,6 +65,14 @@ export class Result <E, T> {
 
     constructor (private _error: E, private _value: T) {}
 
+    get value (): Optional<T> {
+        return Optional.of(this._value);
+    }
+
+    get error (): Optional<E> {
+        return Optional.of(this._error);
+    }
+
     get ok (): boolean {
         return this._error === null;
     }
