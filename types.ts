@@ -61,84 +61,95 @@ export class Optional<T> {
     }
 }
 
-export class Result<E, T> {
-    ok: boolean;
-    private value: T;
-    private error: E;
-    constructor(ok: boolean, error: E, value: T) {
-        this.ok = ok;
-        this.value = value;
-        this.error = error;
+export class Result <E, T> {
+
+    constructor (private _error: E, private _value: T) {}
+
+    get ok (): boolean {
+        return this._error === null;
     }
-    static ok<E,T>(v: T) {
-        return new Result(true, null, v);
+
+    get fail (): boolean {
+        return ! this.ok;
     }
-    static fail<E,T>(e: E) {
-        return new Result(false, e, null);
+
+    static ok <E,T> (v: T) {
+        return new Result(null, v);
     }
-    jsonable(errorT: (error: E) => Jsonable, valueT: (data: T) => Jsonable): Jsonable {
+
+    static fail <E,T> (e: E) {
+        return new Result(e, null);
+    }
+
+    jsonable (errorT: (error: E) => Jsonable, valueT: (data: T) => Jsonable): Jsonable {
         if (this.ok) {
-            return [null, valueT(this.value)];
+            return [null, valueT(this._value)];
         } else {
-            return [errorT(this.error), null];
+            return [errorT(this._error), null];
         }
     }
-    static restore<E, T>(data: Jsonable, errorT: (error: Jsonable) => E, valueT: (data: Jsonable) => T): Result<E, T> {
+
+    static restore <E, T> (data: Jsonable, errorT: (error: Jsonable) => E, valueT: (data: Jsonable) => T): Result<E, T> {
         if (data[0] === null) {
             return Result.ok(valueT(data[1]));
         } else {
             return Result.fail(errorT(data[0]));
         }
     }
-    map<R>(f:(v:T)=>R): Result<E,R> {
+
+    map <R> (f:(v:T)=>R): Result<E,R> {
         if (this.ok) {
-            return Result.ok(f(this.value));
+            return Result.ok(f(this._value));
         } else {
-            return Result.fail(this.error);
+            return Result.fail(this._error);
         }
     }
-    chain<R>(f:(v:T)=>Result<E,R>): Result<E,R> {
+
+    chain <R> (f:(v:T)=>Result<E,R>): Result<E,R> {
         if (this.ok) {
-            return f(this.value);
+            return f(this._value);
         } else {
-            return Result.fail(this.error);
+            return Result.fail(this._error);
         }
     }
-    if_ok<R>(f:(v:T)=>R): Result<E,R> {
+
+    if_ok <R> (f:(v:T)=>R): Result<E,R> {
         // result.if_ok 跟 result.map 的作用一樣，但提供比較清楚的語意
         // 讓使用者不用再寫 if (xxx.ok) { xxx.get() } 的程式碼
         return this.map(f);
     }
-    if_error<R>(f:(v:E)=>R): Result<R,T> {
+
+    if_error <R> (f:(v:E)=>R): Result<R,T> {
         if (this.ok) {
-            return Result.ok(this.value);
+            return Result.ok(this._value);
         } else {
-            return Result.fail(f(this.error));
+            return Result.fail(f(this._error));
         }
-    }
-    get fail() {
-        return ! this.ok;
-    }
-    get() {
-        _assert(this.ok, "Result 不 ok");
-        return this.value;
-    }
-    get_error() {
-        _assert(!this.ok, "Result 不 fail");
-        return this.error;
-    }
-    either<R>(f:(e:E)=>R, g:(v:T)=>R): R {
-        if (this.ok) {
-            return g(this.value);
-        } else {
-            return f(this.error);
-        }
-    }
-    or_else(others: T): T {
-        return this.ok ? this.value : others;
     }
 
-    static cat<E,T>(list: Result<E,T>[]): T[] {
+    get () {
+        _assert(this.ok, "Result 不 ok");
+        return this._value;
+    }
+
+    get_error () {
+        _assert(!this.ok, "Result 不 fail");
+        return this._error;
+    }
+
+    either <R> (f:(e:E)=>R, g:(v:T)=>R): R {
+        if (this.ok) {
+            return g(this._value);
+        } else {
+            return f(this._error);
+        }
+    }
+
+    or_else (others: T): T {
+        return this.ok ? this._value : others;
+    }
+
+    static cat <E,T> (list: Result<E,T>[]): T[] {
         return list.filter(r => r.ok).map(r => r.get());
     }
 }
