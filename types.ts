@@ -6,6 +6,17 @@ function _assert(state: boolean, msg: string) {
 
 export type Jsonable = {[field: string]: any} | any [];
 
+function zip <T, S> (a: T[], b: S[]): [T, S][] {
+    let results: [T, S][] = [];
+    const len = Math.min(a.length, b.length);
+    let idx = 0;
+    while (idx < len) {
+        results[idx] = [a[idx], b[idx]];
+        idx += 1;
+    }
+    return results;
+}
+
 export class Optional<T> {
     private value: T;
     constructor(value: T) {
@@ -58,6 +69,14 @@ export class Optional<T> {
 
     static cat<T>(list: Optional<T>[]): T[] {
         return list.filter(i => i.is_present()).map(i => i.get());
+    }
+
+    static fetchCat <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
+        return zip(
+            list,
+            list.map(fetch).map(prop => prop.or_else(null)))
+        .filter(([item, prop]) => prop !== null)
+        .map(([item, prop]) => ({data: prop, src: item}));
     }
 }
 
