@@ -132,7 +132,7 @@ export class Result <E, T> {
         }
     }
 
-    chain <R> (f:(v:T)=>Result<E,R>): Result<E,R> {
+    chain <E2, R> (f: (v:T) => Result <E2, R>): Result <E|E2, R> {
         if (this.ok) {
             return f(this._value);
         } else {
