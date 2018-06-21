@@ -181,27 +181,30 @@ export class Result <E, T> {
     }
 }
 
-export class List<T> extends Array<T> {
-    static of<T>(set: Set<T>): List<T>;
-    static of<T>(data: T[]): List<T>;
-    static of<T>(data): List<T> {
-        let res = new List<T>();
-        if (data instanceof Array) {
-            data.forEach(i => res.push(i));
-        } else if (data instanceof Set) {
-            Array.from((<Set<T>>data).values()).forEach(i => res.push(i));
-        } else {
-            throw 'List.of 只接受 Array, Set 類型的參數';
-        }
-        return res;
+export class List <T> extends Array <T> {
+    /* https://stackoverflow.com/questions/14000645/how-to-extend-native-javascript-array-in-typescript */
+
+    static of <T> (...data: T[]): List <T> {
+        return new List(...data);
     }
-    chain<R>(f: (i: T) => R[]) {
-        function flatten<T>(listOfList: T[][]) {
-            let res: T[] = [];
-            listOfList.forEach(list => list.forEach(i => res.push(i)));
-            return res;
-        }
-        return List.of(flatten(this.map(f)));
+
+    static make <T> (data: T[]): List <T> {
+        return new List(...data);
+    }
+
+    map <S> (f: (v: T, index: number, array: T[]) => S): List <S> {
+        return List.make(super.map(f));
+    }
+
+    filter (f): List <T> {
+        return List.make(super.filter(f));
+    }
+
+    chain <S> (f: (v: T) => S[]): List <S> {
+        const res = this
+            .map(f)
+            .reduce((acc, i) => acc.concat(i), []);
+        return List.make(res);
     }
 }
 
