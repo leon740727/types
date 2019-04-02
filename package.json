@@ -1,0 +1,19 @@
+{
+  "name": "types",
+  "version": "0.0.1",
+  "description": "",
+  "main": "types.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leon740727/types.git"
+  },
+  "author": "leon",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/leon740727/types/issues"
+  },
+  "homepage": "https://github.com/leon740727/types#readme"
+}
