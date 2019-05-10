@@ -4,7 +4,8 @@ function _assert(state: boolean, msg: string) {
     }
 }
 
-export type Jsonable = {[field: string]: any} | any [];
+export type Primitive = string | number | boolean;
+export type Json = Primitive | Primitive[] | {[field: string]: Json} | {[field: string]: Json}[];
 
 function zip <T, S> (a: T[], b: S[]): [T, S][] {
     let results: [T, S][] = [];
@@ -30,10 +31,10 @@ export class Optional<T> {
     static empty() {
         return new Optional(null);
     }
-    jsonable(transformer: (data: T) => Jsonable): Jsonable {
+    jsonable(transformer: (data: T) => Json): Json {
         return this.value == null ? null : transformer(this.value);
     }
-    static restore<T>(data: Jsonable, transformer: (data: Jsonable) => T): Optional<T> {
+    static restore<T>(data: Json, transformer: (data: Json) => T): Optional<T> {
         return Optional.of(data).map(transformer);
     }
     is_present() {
@@ -108,7 +109,7 @@ export class Result <E, T> {
         return new Result(e, null);
     }
 
-    jsonable (errorT: (error: E) => Jsonable, valueT: (data: T) => Jsonable): Jsonable {
+    jsonable (errorT: (error: E) => Json, valueT: (data: T) => Json): Json[] {
         if (this.ok) {
             return [null, valueT(this._value)];
         } else {
@@ -116,7 +117,7 @@ export class Result <E, T> {
         }
     }
 
-    static restore <E, T> (data: Jsonable, errorT: (error: Jsonable) => E, valueT: (data: Jsonable) => T): Result<E, T> {
+    static restore <E, T> (data: Json[], errorT: (error: Json) => E, valueT: (data: Json) => T): Result<E, T> {
         if (data[0] === null) {
             return Result.ok(valueT(data[1]));
         } else {
