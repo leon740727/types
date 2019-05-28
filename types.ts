@@ -28,7 +28,7 @@ export class Optional<T> {
         /** 可傳入 v:U 或 null 或 undefined */
         return new Optional<U>(v);
     }
-    static empty() {
+    static empty <T> (): Optional<T> {
         return new Optional(null);
     }
     jsonable(transformer: (data: T) => Json): Json {
@@ -101,11 +101,11 @@ export class Result <E, T> {
         return ! this.ok;
     }
 
-    static ok <E,T> (v: T) {
+    static ok <E, T> (v: T): Result<E, T> {
         return new Result(null, v);
     }
 
-    static fail <E,T> (e: E) {
+    static fail <E, T> (e: E): Result<E, T> {
         return new Result(e, null);
     }
 
