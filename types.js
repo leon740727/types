@@ -62,6 +62,10 @@ class Optional {
     chain(f) {
         return this.is_present() ? f(this.value) : Optional.empty();
     }
+    static all(values) {
+        const results = Optional.cat(values);
+        return results.length === values.length ? Optional.of(results) : Optional.empty();
+    }
     static cat(list) {
         return list.filter(i => i.is_present()).map(i => i.get());
     }
@@ -158,6 +162,15 @@ class Result {
     }
     or_else(others) {
         return this.ok ? this._value : others;
+    }
+    static all(values) {
+        const results = Result.cat(values);
+        if (results.length === values.length) {
+            return Result.ok(results);
+        }
+        else {
+            return Result.fail(values.map(v => v.error));
+        }
     }
     static cat(list) {
         return list.filter(r => r.ok).map(r => r.get());

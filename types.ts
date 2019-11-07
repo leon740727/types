@@ -68,6 +68,21 @@ export class Optional<T> {
         return this.is_present() ? f(this.value) : Optional.empty();
     }
 
+    static all <T1, T2> (values: [Optional<T1>, Optional<T2>]): Optional<[T1, T2]>;
+    static all <T1, T2, T3> (values: [Optional<T1>, Optional<T2>, Optional<T3>]): Optional<[T1, T2, T3]>;
+    static all <T1, T2, T3, T4> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>]): Optional<[T1, T2, T3, T4]>;
+    static all <T1, T2, T3, T4, T5> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>]): Optional<[T1, T2, T3, T4, T5]>;
+    static all <T1, T2, T3, T4, T5, T6> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>]): Optional<[T1, T2, T3, T4, T5, T6]>;
+    static all <T1, T2, T3, T4, T5, T6, T7> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>]): Optional<[T1, T2, T3, T4, T5, T6, T7]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>, Optional<T10>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
+    static all <T> (values: Optional<T>[]): Optional<T[]>;
+    static all (values: Optional<any>[]) {
+        const results = Optional.cat(values);
+        return results.length === values.length ? Optional.of(results) : Optional.empty();
+    }
+
     static cat<T>(list: Optional<T>[]): T[] {
         return list.filter(i => i.is_present()).map(i => i.get());
     }
@@ -175,6 +190,25 @@ export class Result <E, T> {
 
     or_else (others: T): T {
         return this.ok ? this._value : others;
+    }
+
+    static all <T1, T2, E> (values: [Result<E, T1>, Result<E, T2>]): Result<Optional<E>[], [T1, T2]>;
+    static all <T1, T2, T3, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>]): Result<Optional<E>[], [T1, T2, T3]>;
+    static all <T1, T2, T3, T4, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>]): Result<Optional<E>[], [T1, T2, T3, T4]>;
+    static all <T1, T2, T3, T4, T5, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>]): Result<Optional<E>[], [T1, T2, T3, T4, T5]>;
+    static all <T1, T2, T3, T4, T5, T6, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
+    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>, Result<E, T10>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
+    static all <T, E> (values: Result<E, T>[]): Result<Optional<E>[], T[]>;
+    static all <E> (values: Result<E, any>[]) {
+        const results = Result.cat(values);
+        if (results.length === values.length) {
+            return Result.ok(results);
+        } else {
+            return Result.fail(values.map(v => v.error));
+        }
     }
 
     static cat <E,T> (list: Result<E,T>[]): T[] {
