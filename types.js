@@ -22,24 +22,24 @@ class Optional {
     static empty() {
         return new Optional(null);
     }
-    is_present() {
+    get present() {
         return this.value !== null && this.value !== undefined;
     }
     or_else(others) {
-        return this.is_present() ? this.value : others;
+        return this.present ? this.value : others;
     }
     or_exec(func) {
         // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
         // 例如: doc.or_else(load_default()) 不論 doc 是否有值，load_default 都會執行
         // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
-        return this.is_present() ? this.value : func();
+        return this.present ? this.value : func();
     }
     or_fail(error) {
-        return this.is_present() ? Result.ok(this.value) : Result.fail(error);
+        return this.present ? Result.ok(this.value) : Result.fail(error);
     }
     /** get value or throw an error */
     or_error(error) {
-        if (this.is_present()) {
+        if (this.present) {
             return this.value;
         }
         else {
@@ -47,7 +47,7 @@ class Optional {
         }
     }
     map(f) {
-        return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
+        return this.present ? Optional.of(f(this.value)) : Optional.empty();
     }
     if_present(f) {
         // something.if_present 跟 something.map 的作用一樣，但提供比較清楚的語意
@@ -55,14 +55,14 @@ class Optional {
         return this.map(f);
     }
     chain(f) {
-        return this.is_present() ? f(this.value) : Optional.empty();
+        return this.present ? f(this.value) : Optional.empty();
     }
     static all(values) {
         const results = Optional.cat(values);
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
     static cat(list) {
-        return list.filter(i => i.is_present()).map(i => i.or_else(null));
+        return list.filter(i => i.present).map(i => i.or_else(null));
     }
     static fetchCat(list, fetch) {
         return zip(list, list.map(fetch).map(prop => prop.or_else(null)))

@@ -25,25 +25,29 @@ export class Optional<T> {
     static empty <T> (): Optional<T> {
         return new Optional(null);
     }
-    is_present() {
+
+    get present() {
         return this.value !== null && this.value !== undefined;
     }
+
     or_else(others: T) {
-        return this.is_present() ? this.value : others;
+        return this.present ? this.value : others;
     }
+
     or_exec(func: () => T) {
         // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
         // 例如: doc.or_else(load_default()) 不論 doc 是否有值，load_default 都會執行
         // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
-        return this.is_present() ? this.value : func();
+        return this.present ? this.value : func();
     }
+
     or_fail<E>(error: E): Result<E, T> {
-        return this.is_present() ? Result.ok(this.value) : Result.fail(error);
+        return this.present ? Result.ok(this.value) : Result.fail(error);
     }
 
     /** get value or throw an error */
     or_error <E> (error: E): T {
-        if (this.is_present()) {
+        if (this.present) {
             return this.value;
         } else {
             throw error;
@@ -51,15 +55,17 @@ export class Optional<T> {
     }
 
     map<R>(f: (a: T) => R): Optional<R> {
-        return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
+        return this.present ? Optional.of(f(this.value)) : Optional.empty();
     }
+
     if_present<R>(f: (a: T) => R): Optional<R> {
         // something.if_present 跟 something.map 的作用一樣，但提供比較清楚的語意
         // 讓使用者不用再寫 if (xxx.is_present()) { xxx.get() } 的程式碼
         return this.map(f);
     }
+    
     chain<R>(f: (a: T) => Optional<R>): Optional<R> {
-        return this.is_present() ? f(this.value) : Optional.empty();
+        return this.present ? f(this.value) : Optional.empty();
     }
 
     static all <T1, T2> (values: [Optional<T1>, Optional<T2>]): Optional<[T1, T2]>;
@@ -78,7 +84,7 @@ export class Optional<T> {
     }
 
     static cat<T>(list: Optional<T>[]): T[] {
-        return list.filter(i => i.is_present()).map(i => i.or_else(null));
+        return list.filter(i => i.present).map(i => i.or_else(null));
     }
 
     static fetchCat <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
