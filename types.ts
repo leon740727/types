@@ -1,9 +1,3 @@
-function _assert(state: boolean, msg: string) {
-    if (!state) {
-        throw msg;
-    }
-}
-
 export type Primitive = string | number | boolean;
 export type Json = Primitive | Primitive[] | {[field: string]: Json} | {[field: string]: Json}[];
 
@@ -40,10 +34,6 @@ export class Optional<T> {
     is_present() {
         return this.value !== null && this.value !== undefined;
     }
-    get(): T {
-        _assert(this.is_present(), "NULL ERROR!!");
-        return this.value;
-    }
     or_else(others: T) {
         return this.is_present() ? this.value : others;
     }
@@ -56,6 +46,16 @@ export class Optional<T> {
     or_fail<E>(error: E): Result<E, T> {
         return this.is_present() ? Result.ok(this.value) : Result.fail(error);
     }
+
+    /** get value or throw an error */
+    or_error <E> (error: E): T {
+        if (this.is_present()) {
+            return this.value;
+        } else {
+            throw error;
+        }
+    }
+
     map<R>(f: (a: T) => R): Optional<R> {
         return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
     }
@@ -84,7 +84,7 @@ export class Optional<T> {
     }
 
     static cat<T>(list: Optional<T>[]): T[] {
-        return list.filter(i => i.is_present()).map(i => i.get());
+        return list.filter(i => i.is_present()).map(i => i.or_else(null));
     }
 
     static fetchCat <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
@@ -170,16 +170,6 @@ export class Result <E, T> {
         }
     }
 
-    get () {
-        _assert(this.ok, "Result 不 ok");
-        return this._value;
-    }
-
-    get_error () {
-        _assert(!this.ok, "Result 不 fail");
-        return this._error;
-    }
-
     either <R> (f:(e:E)=>R, g:(v:T)=>R): R {
         if (this.ok) {
             return g(this._value);
@@ -190,6 +180,15 @@ export class Result <E, T> {
 
     or_else (others: T): T {
         return this.ok ? this._value : others;
+    }
+
+    /** get value or throw error */
+    or_error (): T {
+        if (this.ok) {
+            return this._value;
+        } else {
+            throw this._error;
+        }
     }
 
     static all <T1, T2, E> (values: [Result<E, T1>, Result<E, T2>]): Result<Optional<E>[], [T1, T2]>;
@@ -212,7 +211,7 @@ export class Result <E, T> {
     }
 
     static cat <E,T> (list: Result<E,T>[]): T[] {
-        return list.filter(r => r.ok).map(r => r.get());
+        return list.filter(r => r.ok).map(r => r.or_error());
     }
 }
 
@@ -296,7 +295,7 @@ export class PromiseOptional<T> {
         return new PromiseOptional(res);
     }
     or_else(other: T): Promise<T> {
-        return this.data.then(d => d.is_present() ? d.get() : other);
+        return this.data.then(d => d.or_else(other));
     }
     or_fail<E>(error: E): PromiseResult<E, T> {
         return PromiseResult.make(this.map(data => Result.ok<E, T>(data)).or_else(Result.fail(error)));

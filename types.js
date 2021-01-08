@@ -1,10 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-function _assert(state, msg) {
-    if (!state) {
-        throw msg;
-    }
-}
+exports.liftA4 = exports.liftA3 = exports.liftA2 = exports.PromiseResult = exports.PromiseOptional = exports.IO = exports.List = exports.Result = exports.Optional = void 0;
 function zip(a, b) {
     let results = [];
     const len = Math.min(a.length, b.length);
@@ -35,10 +31,6 @@ class Optional {
     is_present() {
         return this.value !== null && this.value !== undefined;
     }
-    get() {
-        _assert(this.is_present(), "NULL ERROR!!");
-        return this.value;
-    }
     or_else(others) {
         return this.is_present() ? this.value : others;
     }
@@ -50,6 +42,15 @@ class Optional {
     }
     or_fail(error) {
         return this.is_present() ? Result.ok(this.value) : Result.fail(error);
+    }
+    /** get value or throw an error */
+    or_error(error) {
+        if (this.is_present()) {
+            return this.value;
+        }
+        else {
+            throw error;
+        }
     }
     map(f) {
         return this.is_present() ? Optional.of(f(this.value)) : Optional.empty();
@@ -67,7 +68,7 @@ class Optional {
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
     static cat(list) {
-        return list.filter(i => i.is_present()).map(i => i.get());
+        return list.filter(i => i.is_present()).map(i => i.or_else(null));
     }
     static fetchCat(list, fetch) {
         return zip(list, list.map(fetch).map(prop => prop.or_else(null)))
@@ -144,14 +145,6 @@ class Result {
             return Result.fail(f(this._error));
         }
     }
-    get() {
-        _assert(this.ok, "Result 不 ok");
-        return this._value;
-    }
-    get_error() {
-        _assert(!this.ok, "Result 不 fail");
-        return this._error;
-    }
     either(f, g) {
         if (this.ok) {
             return g(this._value);
@@ -163,6 +156,15 @@ class Result {
     or_else(others) {
         return this.ok ? this._value : others;
     }
+    /** get value or throw error */
+    or_error() {
+        if (this.ok) {
+            return this._value;
+        }
+        else {
+            throw this._error;
+        }
+    }
     static all(values) {
         const results = Result.cat(values);
         if (results.length === values.length) {
@@ -173,7 +175,7 @@ class Result {
         }
     }
     static cat(list) {
-        return list.filter(r => r.ok).map(r => r.get());
+        return list.filter(r => r.ok).map(r => r.or_error());
     }
 }
 exports.Result = Result;
@@ -245,7 +247,7 @@ class PromiseOptional {
         return new PromiseOptional(res);
     }
     or_else(other) {
-        return this.data.then(d => d.is_present() ? d.get() : other);
+        return this.data.then(d => d.or_else(other));
     }
     or_fail(error) {
         return PromiseResult.make(this.map(data => Result.ok(data)).or_else(Result.fail(error)));
