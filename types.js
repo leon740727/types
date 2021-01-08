@@ -22,12 +22,6 @@ class Optional {
     static empty() {
         return new Optional(null);
     }
-    jsonable(transformer) {
-        return this.value == null ? null : transformer(this.value);
-    }
-    static restore(data, transformer) {
-        return Optional.of(data).map(transformer);
-    }
     is_present() {
         return this.value !== null && this.value !== undefined;
     }
@@ -99,22 +93,6 @@ class Result {
     }
     static fail(e) {
         return new Result(e, null);
-    }
-    jsonable(errorT, valueT) {
-        if (this.ok) {
-            return [null, valueT(this._value)];
-        }
-        else {
-            return [errorT(this._error), null];
-        }
-    }
-    static restore(data, errorT, valueT) {
-        if (data[0] === null) {
-            return Result.ok(valueT(data[1]));
-        }
-        else {
-            return Result.fail(errorT(data[0]));
-        }
     }
     map(f) {
         if (this.ok) {

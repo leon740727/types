@@ -25,12 +25,6 @@ export class Optional<T> {
     static empty <T> (): Optional<T> {
         return new Optional(null);
     }
-    jsonable(transformer: (data: T) => Json): Json {
-        return this.value == null ? null : transformer(this.value);
-    }
-    static restore<T>(data: Json, transformer: (data: Json) => T): Optional<T> {
-        return Optional.of(data).map(transformer);
-    }
     is_present() {
         return this.value !== null && this.value !== undefined;
     }
@@ -122,22 +116,6 @@ export class Result <E, T> {
 
     static fail <E, T> (e: E): Result<E, T> {
         return new Result(e, null);
-    }
-
-    jsonable (errorT: (error: E) => Json, valueT: (data: T) => Json): Json[] {
-        if (this.ok) {
-            return [null, valueT(this._value)];
-        } else {
-            return [errorT(this._error), null];
-        }
-    }
-
-    static restore <E, T> (data: Json[], errorT: (error: Json) => E, valueT: (data: Json) => T): Result<E, T> {
-        if (data[0] === null) {
-            return Result.ok(valueT(data[1]));
-        } else {
-            return Result.fail(errorT(data[0]));
-        }
     }
 
     map <R> (f:(v:T)=>R): Result<E,R> {
