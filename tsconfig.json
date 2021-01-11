@@ -1,10 +1,12 @@
 {
     "compilerOptions": {
         "target": "ES6",
+        "outDir": "./build/",
+        "declaration": true,
         "experimentalDecorators": true,
         "module": "commonjs"
     },
     "files": [
-        "types.ts",
+        "src/index.ts",
     ]
 }
