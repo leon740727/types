@@ -16,7 +16,6 @@ class Optional {
         this.value = value;
     }
     static of(v) {
-        /** 可傳入 v:U 或 null 或 undefined */
         return new Optional(v);
     }
     static empty() {
@@ -27,6 +26,9 @@ class Optional {
     }
     or_else(others) {
         return this.present ? this.value : others;
+    }
+    or_null() {
+        return this.present ? this.value : null;
     }
     or_exec(func) {
         // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
@@ -62,10 +64,10 @@ class Optional {
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
     static cat(list) {
-        return list.filter(i => i.present).map(i => i.or_else(null));
+        return list.filter(i => i.present).map(i => i.or_null());
     }
     static fetchCat(list, fetch) {
-        return zip(list, list.map(fetch).map(prop => prop.or_else(null)))
+        return zip(list, list.map(fetch).map(prop => prop.or_null()))
             .filter(([item, prop]) => prop !== null)
             .map(([item, prop]) => ({ data: prop, src: item }));
     }
@@ -77,37 +79,37 @@ class Result {
         this._value = _value;
     }
     get value() {
-        return Optional.of(this._value);
+        return this._value;
     }
     get error() {
-        return Optional.of(this._error);
+        return this._error;
     }
     get ok() {
-        return this._error === null;
+        return this.value.present;
     }
     get fail() {
         return !this.ok;
     }
     static ok(v) {
-        return new Result(null, v);
+        return new Result(Optional.empty(), Optional.of(v));
     }
     static fail(e) {
-        return new Result(e, null);
+        return new Result(Optional.of(e), Optional.empty());
     }
     map(f) {
         if (this.ok) {
-            return Result.ok(f(this._value));
+            return Result.ok(f(this.value.or_error('wont happened')));
         }
         else {
-            return Result.fail(this._error);
+            return Result.fail(this.error.or_error('wont happened'));
         }
     }
     chain(f) {
         if (this.ok) {
-            return f(this._value);
+            return f(this.value.or_error('wont happened'));
         }
         else {
-            return Result.fail(this._error);
+            return Result.fail(this.error.or_error('wont happened'));
         }
     }
     if_ok(f) {
@@ -117,27 +119,27 @@ class Result {
     }
     if_error(f) {
         if (this.ok) {
-            return Result.ok(this._value);
+            return Result.ok(this.value.or_error('wont happened'));
         }
         else {
-            return Result.fail(f(this._error));
+            return Result.fail(f(this.error.or_error('wont happened')));
         }
     }
     either(f, g) {
         if (this.ok) {
-            return g(this._value);
+            return g(this.value.or_error('wont happened'));
         }
         else {
-            return f(this._error);
+            return f(this.error.or_error('wont happened'));
         }
     }
     or_else(others) {
-        return this.ok ? this._value : others;
+        return this.ok ? this.value.or_error('wont happened') : others;
     }
     /** get value or throw error */
     or_error() {
         if (this.ok) {
-            return this._value;
+            return this.value.or_error('wont happened');
         }
         else {
             throw this._error;

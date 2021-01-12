@@ -13,25 +13,27 @@ function zip <T, S> (a: T[], b: S[]): [T, S][] {
 }
 
 export class Optional<T> {
-    private value: T;
-    constructor(value: T) {
-        this.value = value;
+
+    constructor (private value: T | null | undefined) {}
+
+    static of <T> (v: T | null | undefined) {
+        return new Optional<T>(v);
     }
 
-    static of<U>(v: U) {
-        /** 可傳入 v:U 或 null 或 undefined */
-        return new Optional<U>(v);
-    }
     static empty <T> (): Optional<T> {
-        return new Optional(null);
+        return new Optional<T>(null);
     }
 
     get present() {
         return this.value !== null && this.value !== undefined;
     }
 
-    or_else(others: T) {
-        return this.present ? this.value : others;
+    or_else (others: T): T {
+        return this.present ? this.value as T : others;
+    }
+
+    or_null () {
+        return this.present ? this.value as T : null;
     }
 
     or_exec(func: () => T) {
@@ -41,21 +43,21 @@ export class Optional<T> {
         return this.present ? this.value : func();
     }
 
-    or_fail<E>(error: E): Result<E, T> {
-        return this.present ? Result.ok(this.value) : Result.fail(error);
+    or_fail <E> (error: E): Result<E, T> {
+        return this.present ? Result.ok(this.value as T) : Result.fail(error);
     }
 
     /** get value or throw an error */
     or_error <E> (error: E): T {
         if (this.present) {
-            return this.value;
+            return this.value as T;
         } else {
             throw error;
         }
     }
 
-    map<R>(f: (a: T) => R): Optional<R> {
-        return this.present ? Optional.of(f(this.value)) : Optional.empty();
+    map <R> (f: (a: T) => R): Optional<R> {
+        return this.present ? Optional.of(f(this.value as T)) : Optional.empty();
     }
 
     if_present<R>(f: (a: T) => R): Optional<R> {
@@ -64,8 +66,8 @@ export class Optional<T> {
         return this.map(f);
     }
     
-    chain<R>(f: (a: T) => Optional<R>): Optional<R> {
-        return this.present ? f(this.value) : Optional.empty();
+    chain <R> (f: (a: T) => Optional<R>): Optional<R> {
+        return this.present ? f(this.value as T) : Optional.empty();
     }
 
     static all <T1, T2> (values: [Optional<T1>, Optional<T2>]): Optional<[T1, T2]>;
@@ -83,33 +85,36 @@ export class Optional<T> {
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
 
-    static cat<T>(list: Optional<T>[]): T[] {
-        return list.filter(i => i.present).map(i => i.or_else(null));
+    static cat <T> (list: Optional<T>[]): T[] {
+        return list.filter(i => i.present).map(i => i.or_null() as T);
     }
 
     static fetchCat <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
         return zip(
             list,
-            list.map(fetch).map(prop => prop.or_else(null)))
+            list.map(fetch).map(prop => prop.or_null()))
         .filter(([item, prop]) => prop !== null)
-        .map(([item, prop]) => ({data: prop, src: item}));
+        .map(([item, prop]) => ({data: prop as S, src: item}));
     }
 }
 
 export class Result <E, T> {
 
-    constructor (private _error: E, private _value: T) {}
+    constructor (
+        private _error: Optional<E>,
+        private _value: Optional<T>,
+    ) {}
 
     get value (): Optional<T> {
-        return Optional.of(this._value);
+        return this._value;
     }
 
     get error (): Optional<E> {
-        return Optional.of(this._error);
+        return this._error;
     }
 
     get ok (): boolean {
-        return this._error === null;
+        return this.value.present;
     }
 
     get fail (): boolean {
@@ -117,26 +122,26 @@ export class Result <E, T> {
     }
 
     static ok <E, T> (v: T): Result<E, T> {
-        return new Result(null, v);
+        return new Result<E, T>(Optional.empty(), Optional.of(v));
     }
 
     static fail <E, T> (e: E): Result<E, T> {
-        return new Result(e, null);
+        return new Result<E, T>(Optional.of(e), Optional.empty());
     }
 
     map <R> (f:(v:T)=>R): Result<E,R> {
         if (this.ok) {
-            return Result.ok(f(this._value));
+            return Result.ok(f(this.value.or_error('wont happened')));
         } else {
-            return Result.fail(this._error);
+            return Result.fail(this.error.or_error('wont happened'));
         }
     }
 
     chain <E2, R> (f: (v:T) => Result <E2, R>): Result <E|E2, R> {
         if (this.ok) {
-            return f(this._value);
+            return f(this.value.or_error('wont happened'));
         } else {
-            return Result.fail(this._error);
+            return Result.fail(this.error.or_error('wont happened'));
         }
     }
 
@@ -148,28 +153,28 @@ export class Result <E, T> {
 
     if_error <R> (f:(v:E)=>R): Result<R,T> {
         if (this.ok) {
-            return Result.ok(this._value);
+            return Result.ok(this.value.or_error('wont happened'));
         } else {
-            return Result.fail(f(this._error));
+            return Result.fail(f(this.error.or_error('wont happened')));
         }
     }
 
     either <R> (f:(e:E)=>R, g:(v:T)=>R): R {
         if (this.ok) {
-            return g(this._value);
+            return g(this.value.or_error('wont happened'));
         } else {
-            return f(this._error);
+            return f(this.error.or_error('wont happened'));
         }
     }
 
     or_else (others: T): T {
-        return this.ok ? this._value : others;
+        return this.ok ? this.value.or_error('wont happened') : others;
     }
 
     /** get value or throw error */
     or_error (): T {
         if (this.ok) {
-            return this._value;
+            return this.value.or_error('wont happened');
         } else {
             throw this._error;
         }

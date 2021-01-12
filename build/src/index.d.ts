@@ -6,12 +6,13 @@ export declare type Json = Primitive | Primitive[] | {
 }[];
 export declare class Optional<T> {
     private value;
-    constructor(value: T);
-    static of<U>(v: U): Optional<U>;
+    constructor(value: T | null | undefined);
+    static of<T>(v: T | null | undefined): Optional<T>;
     static empty<T>(): Optional<T>;
     get present(): boolean;
     or_else(others: T): T;
-    or_exec(func: () => T): T;
+    or_null(): T | null;
+    or_exec(func: () => T): T | null | undefined;
     or_fail<E>(error: E): Result<E, T>;
     /** get value or throw an error */
     or_error<E>(error: E): T;
@@ -37,7 +38,7 @@ export declare class Optional<T> {
 export declare class Result<E, T> {
     private _error;
     private _value;
-    constructor(_error: E, _value: T);
+    constructor(_error: Optional<E>, _value: Optional<T>);
     get value(): Optional<T>;
     get error(): Optional<E>;
     get ok(): boolean;
