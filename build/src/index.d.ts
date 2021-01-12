@@ -10,14 +10,15 @@ export declare class Optional<T> {
     static of<T>(v: T | null | undefined): Optional<T>;
     static empty<T>(): Optional<T>;
     get present(): boolean;
-    or_else(others: T): T;
-    or_null(): T | null;
-    or_exec(func: () => T): T | null | undefined;
-    or_fail<E>(error: E): Result<E, T>;
+    orElse(others: T): T;
+    orNull(): T | null;
+    orExec(func: () => T): T | null | undefined;
+    orFail<E>(error: E): Result<E, T>;
     /** get value or throw an error */
-    or_error<E>(error: E): T;
+    orError<E>(error: E): T;
     map<R>(f: (a: T) => R): Optional<R>;
-    if_present<R>(f: (a: T) => R): Optional<R>;
+    /** alias of Optional.map() */
+    ifPresent<R>(f: (a: T) => R): Optional<R>;
     chain<R>(f: (a: T) => Optional<R>): Optional<R>;
     static all<T1, T2>(values: [Optional<T1>, Optional<T2>]): Optional<[T1, T2]>;
     static all<T1, T2, T3>(values: [Optional<T1>, Optional<T2>, Optional<T3>]): Optional<[T1, T2, T3]>;
@@ -29,8 +30,8 @@ export declare class Optional<T> {
     static all<T1, T2, T3, T4, T5, T6, T7, T8, T9>(values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
     static all<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>, Optional<T10>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
     static all<T>(values: Optional<T>[]): Optional<T[]>;
-    static cat<T>(list: Optional<T>[]): T[];
-    static fetchCat<T, S>(list: T[], fetch: (item: T) => Optional<S>): {
+    static filter<T>(list: Optional<T>[]): T[];
+    static fetchFilter<T, S>(list: T[], fetch: (item: T) => Optional<S>): {
         data: S;
         src: T;
     }[];
@@ -47,12 +48,13 @@ export declare class Result<E, T> {
     static fail<E, T>(e: E): Result<E, T>;
     map<R>(f: (v: T) => R): Result<E, R>;
     chain<E2, R>(f: (v: T) => Result<E2, R>): Result<E | E2, R>;
-    if_ok<R>(f: (v: T) => R): Result<E, R>;
-    if_error<R>(f: (v: E) => R): Result<R, T>;
+    /** alias of Result.map() */
+    ifOk<R>(f: (v: T) => R): Result<E, R>;
+    ifError<R>(f: (v: E) => R): Result<R, T>;
     either<R>(f: (e: E) => R, g: (v: T) => R): R;
-    or_else(others: T): T;
+    orElse(others: T): T;
     /** get value or throw error */
-    or_error(): T;
+    orError(): T;
     static all<T1, T2, E>(values: [Result<E, T1>, Result<E, T2>]): Result<Optional<E>[], [T1, T2]>;
     static all<T1, T2, T3, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>]): Result<Optional<E>[], [T1, T2, T3]>;
     static all<T1, T2, T3, T4, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>]): Result<Optional<E>[], [T1, T2, T3, T4]>;
@@ -63,7 +65,7 @@ export declare class Result<E, T> {
     static all<T1, T2, T3, T4, T5, T6, T7, T8, T9, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
     static all<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>, Result<E, T10>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
     static all<T, E>(values: Result<E, T>[]): Result<Optional<E>[], T[]>;
-    static cat<E, T>(list: Result<E, T>[]): T[];
+    static filter<E, T>(list: Result<E, T>[]): T[];
 }
 export declare class List<T> extends Array<T> {
     static of<T>(...data: T[]): List<T>;
@@ -87,8 +89,8 @@ export declare class PromiseOptional<T> {
     map<R>(f: (p: T) => R): PromiseOptional<R>;
     chain<R>(f: (p: T) => PromiseOptional<R>): PromiseOptional<R>;
     chain<R>(f: (p: T) => Promise<Optional<R>>): PromiseOptional<R>;
-    or_else(other: T): Promise<T>;
-    or_fail<E>(error: E): PromiseResult<E, T>;
+    orElse(other: T): Promise<T>;
+    orFail<E>(error: E): PromiseResult<E, T>;
 }
 export declare class PromiseResult<E, T> {
     data: Promise<Result<E, T>>;

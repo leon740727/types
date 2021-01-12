@@ -24,23 +24,23 @@ class Optional {
     get present() {
         return this.value !== null && this.value !== undefined;
     }
-    or_else(others) {
+    orElse(others) {
         return this.present ? this.value : others;
     }
-    or_null() {
+    orNull() {
         return this.present ? this.value : null;
     }
-    or_exec(func) {
-        // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
-        // 例如: doc.or_else(load_default()) 不論 doc 是否有值，load_default 都會執行
-        // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
+    orExec(func) {
+        // 無論 Optional 是否有值，orElse 裡面的表達式都會被求值
+        // 例如: doc.orElse(loadDefault()) 不論 doc 是否有值，loadDefault 都會執行
+        // 如果不希望 orElse 裡面的表達式被無謂求值，就用 orExec
         return this.present ? this.value : func();
     }
-    or_fail(error) {
+    orFail(error) {
         return this.present ? Result.ok(this.value) : Result.fail(error);
     }
     /** get value or throw an error */
-    or_error(error) {
+    orError(error) {
         if (this.present) {
             return this.value;
         }
@@ -51,23 +51,24 @@ class Optional {
     map(f) {
         return this.present ? Optional.of(f(this.value)) : Optional.empty();
     }
-    if_present(f) {
-        // something.if_present 跟 something.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.is_present()) { xxx.get() } 的程式碼
+    /** alias of Optional.map() */
+    ifPresent(f) {
+        // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼
         return this.map(f);
     }
     chain(f) {
         return this.present ? f(this.value) : Optional.empty();
     }
     static all(values) {
-        const results = Optional.cat(values);
+        const results = Optional.filter(values);
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
-    static cat(list) {
-        return list.filter(i => i.present).map(i => i.or_null());
+    static filter(list) {
+        return list.filter(i => i.present).map(i => i.orNull());
     }
-    static fetchCat(list, fetch) {
-        return zip(list, list.map(fetch).map(prop => prop.or_null()))
+    static fetchFilter(list, fetch) {
+        return zip(list, list.map(fetch).map(prop => prop.orNull()))
             .filter(([item, prop]) => prop !== null)
             .map(([item, prop]) => ({ data: prop, src: item }));
     }
@@ -98,55 +99,56 @@ class Result {
     }
     map(f) {
         if (this.ok) {
-            return Result.ok(f(this.value.or_error('wont happened')));
+            return Result.ok(f(this.value.orError('wont happened')));
         }
         else {
-            return Result.fail(this.error.or_error('wont happened'));
+            return Result.fail(this.error.orError('wont happened'));
         }
     }
     chain(f) {
         if (this.ok) {
-            return f(this.value.or_error('wont happened'));
+            return f(this.value.orError('wont happened'));
         }
         else {
-            return Result.fail(this.error.or_error('wont happened'));
+            return Result.fail(this.error.orError('wont happened'));
         }
     }
-    if_ok(f) {
-        // result.if_ok 跟 result.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.ok) { xxx.get() } 的程式碼
+    /** alias of Result.map() */
+    ifOk(f) {
+        // result.ifOk 跟 result.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.ok) { xxx } 的程式碼
         return this.map(f);
     }
-    if_error(f) {
+    ifError(f) {
         if (this.ok) {
-            return Result.ok(this.value.or_error('wont happened'));
+            return Result.ok(this.value.orError('wont happened'));
         }
         else {
-            return Result.fail(f(this.error.or_error('wont happened')));
+            return Result.fail(f(this.error.orError('wont happened')));
         }
     }
     either(f, g) {
         if (this.ok) {
-            return g(this.value.or_error('wont happened'));
+            return g(this.value.orError('wont happened'));
         }
         else {
-            return f(this.error.or_error('wont happened'));
+            return f(this.error.orError('wont happened'));
         }
     }
-    or_else(others) {
-        return this.ok ? this.value.or_error('wont happened') : others;
+    orElse(others) {
+        return this.ok ? this.value.orError('wont happened') : others;
     }
     /** get value or throw error */
-    or_error() {
+    orError() {
         if (this.ok) {
-            return this.value.or_error('wont happened');
+            return this.value.orError('wont happened');
         }
         else {
             throw this._error;
         }
     }
     static all(values) {
-        const results = Result.cat(values);
+        const results = Result.filter(values);
         if (results.length === values.length) {
             return Result.ok(results);
         }
@@ -154,8 +156,8 @@ class Result {
             return Result.fail(values.map(v => v.error));
         }
     }
-    static cat(list) {
-        return list.filter(r => r.ok).map(r => r.or_error());
+    static filter(list) {
+        return list.filter(r => r.ok).map(r => r.orError());
     }
 }
 exports.Result = Result;
@@ -223,14 +225,14 @@ class PromiseOptional {
             }
         }
         let res = this.data.then(d => d.map(mapper)
-            .or_else(Promise.resolve(Optional.empty())));
+            .orElse(Promise.resolve(Optional.empty())));
         return new PromiseOptional(res);
     }
-    or_else(other) {
-        return this.data.then(d => d.or_else(other));
+    orElse(other) {
+        return this.data.then(d => d.orElse(other));
     }
-    or_fail(error) {
-        return PromiseResult.make(this.map(data => Result.ok(data)).or_else(Result.fail(error)));
+    orFail(error) {
+        return PromiseResult.make(this.map(data => Result.ok(data)).orElse(Result.fail(error)));
     }
 }
 exports.PromiseOptional = PromiseOptional;

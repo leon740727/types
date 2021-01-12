@@ -7,20 +7,20 @@ describe('result', () => {
     it('fail', () => {
         const r = Result.fail('fail');
         assert.ok(r.ok === false);
-        assert.ok(r.value.or_null() === null);
-        assert.ok(r.error.or_null() === 'fail');
+        assert.ok(r.value.orNull() === null);
+        assert.ok(r.error.orNull() === 'fail');
     });
 
     it('ok', () => {
         const r = Result.ok(5);
         assert.ok(r.ok === true);
-        assert.ok(r.value.or_null() === 5);
-        assert.ok(r.error.or_null() === null);
+        assert.ok(r.value.orNull() === 5);
+        assert.ok(r.error.orNull() === null);
     });
 
     it('map & chain', () => {
         const r = Result.ok(5);
-        assert.ok(r.map(n => `five ${n}`).value.or_null() === 'five 5');
-        assert.ok(r.chain(n => Result.ok(`five ${n}`)).value.or_null() === 'five 5');
+        assert.ok(r.map(n => `five ${n}`).value.orNull() === 'five 5');
+        assert.ok(r.chain(n => Result.ok(`five ${n}`)).value.orNull() === 'five 5');
     });
 });

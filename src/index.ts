@@ -28,27 +28,27 @@ export class Optional<T> {
         return this.value !== null && this.value !== undefined;
     }
 
-    or_else (others: T): T {
+    orElse (others: T): T {
         return this.present ? this.value as T : others;
     }
 
-    or_null () {
+    orNull () {
         return this.present ? this.value as T : null;
     }
 
-    or_exec(func: () => T) {
-        // 無論 Optional 是否有值，or_else 裡面的表達式都會被求值
-        // 例如: doc.or_else(load_default()) 不論 doc 是否有值，load_default 都會執行
-        // 如果不希望 or_else 裡面的表達式被無謂求值，就用 or_exec
+    orExec (func: () => T) {
+        // 無論 Optional 是否有值，orElse 裡面的表達式都會被求值
+        // 例如: doc.orElse(loadDefault()) 不論 doc 是否有值，loadDefault 都會執行
+        // 如果不希望 orElse 裡面的表達式被無謂求值，就用 orExec
         return this.present ? this.value : func();
     }
 
-    or_fail <E> (error: E): Result<E, T> {
+    orFail <E> (error: E): Result<E, T> {
         return this.present ? Result.ok(this.value as T) : Result.fail(error);
     }
 
     /** get value or throw an error */
-    or_error <E> (error: E): T {
+    orError <E> (error: E): T {
         if (this.present) {
             return this.value as T;
         } else {
@@ -60,9 +60,10 @@ export class Optional<T> {
         return this.present ? Optional.of(f(this.value as T)) : Optional.empty();
     }
 
-    if_present<R>(f: (a: T) => R): Optional<R> {
-        // something.if_present 跟 something.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.is_present()) { xxx.get() } 的程式碼
+    /** alias of Optional.map() */
+    ifPresent <R> (f: (a: T) => R): Optional<R> {
+        // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼
         return this.map(f);
     }
     
@@ -81,18 +82,18 @@ export class Optional<T> {
     static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>, Optional<T10>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
     static all <T> (values: Optional<T>[]): Optional<T[]>;
     static all (values: Optional<any>[]) {
-        const results = Optional.cat(values);
+        const results = Optional.filter(values);
         return results.length === values.length ? Optional.of(results) : Optional.empty();
     }
 
-    static cat <T> (list: Optional<T>[]): T[] {
-        return list.filter(i => i.present).map(i => i.or_null() as T);
+    static filter <T> (list: Optional<T>[]): T[] {
+        return list.filter(i => i.present).map(i => i.orNull() as T);
     }
 
-    static fetchCat <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
+    static fetchFilter <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
         return zip(
             list,
-            list.map(fetch).map(prop => prop.or_null()))
+            list.map(fetch).map(prop => prop.orNull()))
         .filter(([item, prop]) => prop !== null)
         .map(([item, prop]) => ({data: prop as S, src: item}));
     }
@@ -131,50 +132,51 @@ export class Result <E, T> {
 
     map <R> (f:(v:T)=>R): Result<E,R> {
         if (this.ok) {
-            return Result.ok(f(this.value.or_error('wont happened')));
+            return Result.ok(f(this.value.orError('wont happened')));
         } else {
-            return Result.fail(this.error.or_error('wont happened'));
+            return Result.fail(this.error.orError('wont happened'));
         }
     }
 
     chain <E2, R> (f: (v:T) => Result <E2, R>): Result <E|E2, R> {
         if (this.ok) {
-            return f(this.value.or_error('wont happened'));
+            return f(this.value.orError('wont happened'));
         } else {
-            return Result.fail(this.error.or_error('wont happened'));
+            return Result.fail(this.error.orError('wont happened'));
         }
     }
 
-    if_ok <R> (f:(v:T)=>R): Result<E,R> {
-        // result.if_ok 跟 result.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.ok) { xxx.get() } 的程式碼
+    /** alias of Result.map() */
+    ifOk <R> (f:(v:T)=>R): Result<E,R> {
+        // result.ifOk 跟 result.map 的作用一樣，但提供比較清楚的語意
+        // 讓使用者不用再寫 if (xxx.ok) { xxx } 的程式碼
         return this.map(f);
     }
 
-    if_error <R> (f:(v:E)=>R): Result<R,T> {
+    ifError <R> (f:(v:E)=>R): Result<R,T> {
         if (this.ok) {
-            return Result.ok(this.value.or_error('wont happened'));
+            return Result.ok(this.value.orError('wont happened'));
         } else {
-            return Result.fail(f(this.error.or_error('wont happened')));
+            return Result.fail(f(this.error.orError('wont happened')));
         }
     }
 
     either <R> (f:(e:E)=>R, g:(v:T)=>R): R {
         if (this.ok) {
-            return g(this.value.or_error('wont happened'));
+            return g(this.value.orError('wont happened'));
         } else {
-            return f(this.error.or_error('wont happened'));
+            return f(this.error.orError('wont happened'));
         }
     }
 
-    or_else (others: T): T {
-        return this.ok ? this.value.or_error('wont happened') : others;
+    orElse (others: T): T {
+        return this.ok ? this.value.orError('wont happened') : others;
     }
 
     /** get value or throw error */
-    or_error (): T {
+    orError (): T {
         if (this.ok) {
-            return this.value.or_error('wont happened');
+            return this.value.orError('wont happened');
         } else {
             throw this._error;
         }
@@ -191,7 +193,7 @@ export class Result <E, T> {
     static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>, Result<E, T10>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
     static all <T, E> (values: Result<E, T>[]): Result<Optional<E>[], T[]>;
     static all <E> (values: Result<E, any>[]) {
-        const results = Result.cat(values);
+        const results = Result.filter(values);
         if (results.length === values.length) {
             return Result.ok(results);
         } else {
@@ -199,8 +201,8 @@ export class Result <E, T> {
         }
     }
 
-    static cat <E,T> (list: Result<E,T>[]): T[] {
-        return list.filter(r => r.ok).map(r => r.or_error());
+    static filter <E,T> (list: Result<E,T>[]): T[] {
+        return list.filter(r => r.ok).map(r => r.orError());
     }
 }
 
@@ -280,14 +282,16 @@ export class PromiseOptional<T> {
         }
         let res = this.data.then(d =>
             d.map(mapper)
-             .or_else(Promise.resolve(Optional.empty())));
+             .orElse(Promise.resolve(Optional.empty())));
         return new PromiseOptional(res);
     }
-    or_else(other: T): Promise<T> {
-        return this.data.then(d => d.or_else(other));
+
+    orElse(other: T): Promise<T> {
+        return this.data.then(d => d.orElse(other));
     }
-    or_fail<E>(error: E): PromiseResult<E, T> {
-        return PromiseResult.make(this.map(data => Result.ok<E, T>(data)).or_else(Result.fail(error)));
+
+    orFail<E>(error: E): PromiseResult<E, T> {
+        return PromiseResult.make(this.map(data => Result.ok<E, T>(data)).orElse(Result.fail(error)));
     }
 }
 
