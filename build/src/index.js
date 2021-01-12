@@ -144,7 +144,7 @@ class Result {
             return this.value.orError('wont happened');
         }
         else {
-            throw this._error;
+            throw this.error.orError('wont happened');
         }
     }
     static all(values) {
