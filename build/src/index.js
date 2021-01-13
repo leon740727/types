@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.liftA4 = exports.liftA3 = exports.liftA2 = exports.PromiseResult = exports.PromiseOptional = exports.IO = exports.List = exports.Result = exports.Optional = void 0;
+exports.liftA4 = exports.liftA3 = exports.liftA2 = exports.PromiseResult = exports.PromiseOptional = exports.IO = exports.List = exports.Optional = exports.Result = void 0;
+const result_1 = require("./result");
+var result_2 = require("./result");
+Object.defineProperty(exports, "Result", { enumerable: true, get: function () { return result_2.Result; } });
 function zip(a, b) {
     let results = [];
     const len = Math.min(a.length, b.length);
@@ -37,7 +40,7 @@ class Optional {
         return this.present ? this.value : func();
     }
     orFail(error) {
-        return this.present ? Result.ok(this.value) : Result.fail(error);
+        return this.present ? result_1.Result.ok(this.value) : result_1.Result.fail(error);
     }
     /** get value or throw an error */
     orError(error) {
@@ -74,93 +77,6 @@ class Optional {
     }
 }
 exports.Optional = Optional;
-class Result {
-    constructor(_error, _value) {
-        this._error = _error;
-        this._value = _value;
-    }
-    get value() {
-        return this._value;
-    }
-    get error() {
-        return this._error;
-    }
-    get ok() {
-        return this.value.present;
-    }
-    get fail() {
-        return !this.ok;
-    }
-    static ok(v) {
-        return new Result(Optional.empty(), Optional.of(v));
-    }
-    static fail(e) {
-        return new Result(Optional.of(e), Optional.empty());
-    }
-    map(f) {
-        if (this.ok) {
-            return Result.ok(f(this.value.orError('wont happened')));
-        }
-        else {
-            return Result.fail(this.error.orError('wont happened'));
-        }
-    }
-    chain(f) {
-        if (this.ok) {
-            return f(this.value.orError('wont happened'));
-        }
-        else {
-            return Result.fail(this.error.orError('wont happened'));
-        }
-    }
-    /** alias of Result.map() */
-    ifOk(f) {
-        // result.ifOk 跟 result.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.ok) { xxx } 的程式碼
-        return this.map(f);
-    }
-    ifError(f) {
-        if (this.ok) {
-            return Result.ok(this.value.orError('wont happened'));
-        }
-        else {
-            return Result.fail(f(this.error.orError('wont happened')));
-        }
-    }
-    either(f, g) {
-        if (this.ok) {
-            return g(this.value.orError('wont happened'));
-        }
-        else {
-            return f(this.error.orError('wont happened'));
-        }
-    }
-    orElse(others) {
-        return this.ok ? this.value.orError('wont happened') : others;
-    }
-    /** get value or throw error */
-    orError() {
-        if (this.ok) {
-            return this.value.orError('wont happened');
-        }
-        else {
-            throw this.error.orError('wont happened');
-        }
-    }
-    static all(values) {
-        const results = Result.filter(values);
-        if (results.length === values.length) {
-            return Result.ok(results);
-        }
-        else {
-            return Result.fail(values.map(v => v.error));
-        }
-    }
-    static filter(list) {
-        return list.filter(r => r.ok).map(r => r.orError());
-    }
-}
-exports.Result = Result;
 class List extends Array {
     /* https://stackoverflow.com/questions/14000645/how-to-extend-native-javascript-array-in-typescript */
     static of(...data) {
@@ -232,7 +148,7 @@ class PromiseOptional {
         return this.data.then(d => d.orElse(other));
     }
     orFail(error) {
-        return PromiseResult.make(this.map(data => Result.ok(data)).orElse(Result.fail(error)));
+        return PromiseResult.make(this.map(data => result_1.Result.ok(data)).orElse(result_1.Result.fail(error)));
     }
 }
 exports.PromiseOptional = PromiseOptional;
@@ -241,7 +157,7 @@ class PromiseResult {
         this.data = data;
     }
     static make(data) {
-        if (data instanceof Result) {
+        if (result_1.Result.isa(data)) {
             return new PromiseResult(Promise.resolve(data));
         }
         else {
@@ -261,7 +177,7 @@ class PromiseResult {
                 return res;
             }
         }
-        let res = this.data.then(d => d.map(mapper).either(err => Promise.resolve(Result.fail(err)), data => data));
+        let res = this.data.then(d => d.map(mapper).either(err => Promise.resolve(result_1.Result.fail(err)), data => data));
         return new PromiseResult(res);
     }
     either(f, g) {

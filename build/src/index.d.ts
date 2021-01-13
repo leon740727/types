@@ -1,3 +1,5 @@
+import { Result } from './result';
+export { Result } from './result';
 export declare type Primitive = string | number | boolean;
 export declare type Json = Primitive | Primitive[] | {
     [field: string]: Json;
@@ -35,37 +37,6 @@ export declare class Optional<T> {
         data: S;
         src: T;
     }[];
-}
-export declare class Result<E, T> {
-    private _error;
-    private _value;
-    constructor(_error: Optional<E>, _value: Optional<T>);
-    get value(): Optional<T>;
-    get error(): Optional<E>;
-    get ok(): boolean;
-    get fail(): boolean;
-    static ok<E, T>(v: T): Result<E, T>;
-    static fail<E, T>(e: E): Result<E, T>;
-    map<R>(f: (v: T) => R): Result<E, R>;
-    chain<E2, R>(f: (v: T) => Result<E2, R>): Result<E | E2, R>;
-    /** alias of Result.map() */
-    ifOk<R>(f: (v: T) => R): Result<E, R>;
-    ifError<R>(f: (v: E) => R): Result<R, T>;
-    either<R>(f: (e: E) => R, g: (v: T) => R): R;
-    orElse(others: T): T;
-    /** get value or throw error */
-    orError(): T;
-    static all<T1, T2, E>(values: [Result<E, T1>, Result<E, T2>]): Result<Optional<E>[], [T1, T2]>;
-    static all<T1, T2, T3, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>]): Result<Optional<E>[], [T1, T2, T3]>;
-    static all<T1, T2, T3, T4, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>]): Result<Optional<E>[], [T1, T2, T3, T4]>;
-    static all<T1, T2, T3, T4, T5, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>]): Result<Optional<E>[], [T1, T2, T3, T4, T5]>;
-    static all<T1, T2, T3, T4, T5, T6, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6]>;
-    static all<T1, T2, T3, T4, T5, T6, T7, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7]>;
-    static all<T1, T2, T3, T4, T5, T6, T7, T8, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8]>;
-    static all<T1, T2, T3, T4, T5, T6, T7, T8, T9, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
-    static all<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E>(values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>, Result<E, T10>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
-    static all<T, E>(values: Result<E, T>[]): Result<Optional<E>[], T[]>;
-    static filter<E, T>(list: Result<E, T>[]): T[];
 }
 export declare class List<T> extends Array<T> {
     static of<T>(...data: T[]): List<T>;

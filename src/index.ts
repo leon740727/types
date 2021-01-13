@@ -1,3 +1,6 @@
+import { Result } from './result';
+export { Result } from './result';
+
 export type Primitive = string | number | boolean;
 export type Json = Primitive | Primitive[] | {[field: string]: Json} | {[field: string]: Json}[];
 
@@ -99,113 +102,6 @@ export class Optional<T> {
     }
 }
 
-export class Result <E, T> {
-
-    constructor (
-        private _error: Optional<E>,
-        private _value: Optional<T>,
-    ) {}
-
-    get value (): Optional<T> {
-        return this._value;
-    }
-
-    get error (): Optional<E> {
-        return this._error;
-    }
-
-    get ok (): boolean {
-        return this.value.present;
-    }
-
-    get fail (): boolean {
-        return ! this.ok;
-    }
-
-    static ok <E, T> (v: T): Result<E, T> {
-        return new Result<E, T>(Optional.empty(), Optional.of(v));
-    }
-
-    static fail <E, T> (e: E): Result<E, T> {
-        return new Result<E, T>(Optional.of(e), Optional.empty());
-    }
-
-    map <R> (f:(v:T)=>R): Result<E,R> {
-        if (this.ok) {
-            return Result.ok(f(this.value.orError('wont happened')));
-        } else {
-            return Result.fail(this.error.orError('wont happened'));
-        }
-    }
-
-    chain <E2, R> (f: (v:T) => Result <E2, R>): Result <E|E2, R> {
-        if (this.ok) {
-            return f(this.value.orError('wont happened'));
-        } else {
-            return Result.fail(this.error.orError('wont happened'));
-        }
-    }
-
-    /** alias of Result.map() */
-    ifOk <R> (f:(v:T)=>R): Result<E,R> {
-        // result.ifOk 跟 result.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.ok) { xxx } 的程式碼
-        return this.map(f);
-    }
-
-    ifError <R> (f:(v:E)=>R): Result<R,T> {
-        if (this.ok) {
-            return Result.ok(this.value.orError('wont happened'));
-        } else {
-            return Result.fail(f(this.error.orError('wont happened')));
-        }
-    }
-
-    either <R> (f:(e:E)=>R, g:(v:T)=>R): R {
-        if (this.ok) {
-            return g(this.value.orError('wont happened'));
-        } else {
-            return f(this.error.orError('wont happened'));
-        }
-    }
-
-    orElse (others: T): T {
-        return this.ok ? this.value.orError('wont happened') : others;
-    }
-
-    /** get value or throw error */
-    orError (): T {
-        if (this.ok) {
-            return this.value.orError('wont happened');
-        } else {
-            throw this.error.orError('wont happened');
-        }
-    }
-
-    static all <T1, T2, E> (values: [Result<E, T1>, Result<E, T2>]): Result<Optional<E>[], [T1, T2]>;
-    static all <T1, T2, T3, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>]): Result<Optional<E>[], [T1, T2, T3]>;
-    static all <T1, T2, T3, T4, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>]): Result<Optional<E>[], [T1, T2, T3, T4]>;
-    static all <T1, T2, T3, T4, T5, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>]): Result<Optional<E>[], [T1, T2, T3, T4, T5]>;
-    static all <T1, T2, T3, T4, T5, T6, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, E> (values: [Result<E, T1>, Result<E, T2>, Result<E, T3>, Result<E, T4>, Result<E, T5>, Result<E, T6>, Result<E, T7>, Result<E, T8>, Result<E, T9>, Result<E, T10>]): Result<Optional<E>[], [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
-    static all <T, E> (values: Result<E, T>[]): Result<Optional<E>[], T[]>;
-    static all <E> (values: Result<E, any>[]) {
-        const results = Result.filter(values);
-        if (results.length === values.length) {
-            return Result.ok(results);
-        } else {
-            return Result.fail(values.map(v => v.error));
-        }
-    }
-
-    static filter <E,T> (list: Result<E,T>[]): T[] {
-        return list.filter(r => r.ok).map(r => r.orError());
-    }
-}
-
 export class List <T> extends Array <T> {
     /* https://stackoverflow.com/questions/14000645/how-to-extend-native-javascript-array-in-typescript */
 
@@ -303,7 +199,7 @@ export class PromiseResult<E, T> {
     static make<E, T>(data: Result<E, T>): PromiseResult<E, T>;
     static make<E, T>(data: Promise<Result<E, T>>): PromiseResult<E, T>;
     static make<E, T>(data) {
-        if (data instanceof Result) {
+        if (Result.isa(data)) {
             return new PromiseResult(Promise.resolve(data));
         } else {
             return new PromiseResult(data);
