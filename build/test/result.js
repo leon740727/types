@@ -47,8 +47,8 @@ describe('result', () => {
     it('Result.fail(null)', () => {
         assert.throws(() => index_1.Result.fail(null), { message: 'error value in Result.fail(error) could not be null' });
     });
-    it('不允許 ifError() 把 error 變成 null', () => {
-        assert.throws(() => index_1.Result.fail('').ifError(_ => null), { message: 'function argument in Result.ifError() could not return null' });
+    it('不允許 ifFail() 把 error 變成 null', () => {
+        assert.throws(() => index_1.Result.fail('').ifFail(_ => null), { message: 'function argument in Result.ifFail() could not return null' });
     });
     it('map & chain', () => {
         const r = index_1.Result.ok(5);

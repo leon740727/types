@@ -14,7 +14,7 @@ export interface Result <E, T> {
     /** alias of map() */
     ifOk <T2> (fn: (value: T) => T2): Result <E, T2>;
 
-    ifError <E2> (fn: (error: E) => E2): Result<E2, T>;
+    ifFail <E2> (fn: (error: E) => E2): Result<E2, T>;
 
     either <R> (errorHandler: (error: E) => R, valueHandler: (value: T) => R): R;
 
@@ -92,7 +92,7 @@ class Ok <E, T> implements Result <E, T> {
         return this.map(fn);
     }
 
-    ifError <E2> (fn: (error: E) => E2): Result<E2, T> {
+    ifFail <E2> (fn: (error: E) => E2): Result<E2, T> {
         return new Ok(this._value);
     }
 
@@ -144,7 +144,7 @@ class Fail <E, T> implements Result<E, T> {
         return this.map(fn);
     }
 
-    ifError <E2> (fn: (error: E) => E2): Result<E2, T> {
+    ifFail <E2> (fn: (error: E) => E2): Result<E2, T> {
         const e2 = fn(this._error);
         if (e2 === null) {
             // newError 不能是 null，因為這會改變 Result 的狀態，但卻沒有明確指定一個 right value 給 right Result

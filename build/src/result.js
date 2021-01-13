@@ -56,7 +56,7 @@ class Ok {
     ifOk(fn) {
         return this.map(fn);
     }
-    ifError(fn) {
+    ifFail(fn) {
         return new Ok(this._value);
     }
     either(errorHandler, valueHandler) {
@@ -97,7 +97,7 @@ class Fail {
     ifOk(fn) {
         return this.map(fn);
     }
-    ifError(fn) {
+    ifFail(fn) {
         const e2 = fn(this._error);
         if (e2 === null) {
             // newError 不能是 null，因為這會改變 Result 的狀態，但卻沒有明確指定一個 right value 給 right Result

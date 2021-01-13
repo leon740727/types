@@ -8,7 +8,7 @@ export interface Result<E, T> {
     chain<E2, T2>(fn: (value: T) => Result<E2, T2>): Result<E | E2, T2>;
     /** alias of map() */
     ifOk<T2>(fn: (value: T) => T2): Result<E, T2>;
-    ifError<E2>(fn: (error: E) => E2): Result<E2, T>;
+    ifFail<E2>(fn: (error: E) => E2): Result<E2, T>;
     either<R>(errorHandler: (error: E) => R, valueHandler: (value: T) => R): R;
     orElse(others: T): T;
     /** get value or throw error */

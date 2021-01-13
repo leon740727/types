@@ -56,10 +56,10 @@ describe('result', () => {
             { message: 'error value in Result.fail(error) could not be null' });
     });
 
-    it('不允許 ifError() 把 error 變成 null', () => {
+    it('不允許 ifFail() 把 error 變成 null', () => {
         assert.throws(
-            () => Result.fail<string, number>('').ifError(_ => null),
-            { message: 'function argument in Result.ifError() could not return null' });
+            () => Result.fail<string, number>('').ifFail(_ => null),
+            { message: 'function argument in Result.ifFail() could not return null' });
     });
 
     it('map & chain', () => {
