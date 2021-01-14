@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Result = void 0;
 const index_1 = require("./index");
+const util = require("./util");
 var Result;
 (function (Result) {
     function ok(value) {
@@ -48,7 +49,7 @@ class Ok {
         return index_1.Optional.empty();
     }
     map(fn) {
-        return new Ok(fn(this._value));
+        return new Ok(util.wrap(fn)(this._value));
     }
     chain(fn) {
         return fn(this._value);
@@ -98,7 +99,7 @@ class Fail {
         return this.map(fn);
     }
     ifFail(fn) {
-        const e2 = fn(this._error);
+        const e2 = util.wrap(fn)(this._error);
         if (e2 === null) {
             // newError 不能是 null，因為這會改變 Result 的狀態，但卻沒有明確指定一個 right value 給 right Result
             throw new Error('function argument in Result.ifFail() could not return null');

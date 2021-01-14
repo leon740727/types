@@ -62,6 +62,41 @@ describe('result', () => {
             { message: 'function argument in Result.ifFail() could not return null' });
     });
 
+    it('忽略 map 轉換函式傳回的 undefined', () => {
+        function sideEffect (n: number) {
+            // console.log(n);
+        }
+
+        const o = Result.ok<string, number>(5);
+        const o1 = o.map(_ => true);
+        assert.strictEqual(o1.orError(), true);
+        const o2: Result<string, null> = o.map(_ => null);
+        assert.strictEqual(o2.orError(), null);
+        const o3: Result<string, number> = o.map(_ => undefined);
+        assert.strictEqual(o3.orError(), 5);
+        const o4: Result<string, number> = o.map(sideEffect);
+        assert.strictEqual(o4.orError(), 5);
+
+        const e = Result.fail<string, number>('xx');
+        const e1: Result<string, null> = e.map(i => null);
+        assert.strictEqual(e1.error.orNull(), 'xx');
+        const e2: Result<string, number> = e.map(sideEffect);
+        assert.strictEqual(e2.error.orNull(), 'xx');
+    });
+
+    it('忽略 ifFail 轉換函式傳回的 undefined', () => {
+        function sideEffect (n: string) {
+            // console.log(n);
+        }
+        const o = Result.fail<string, number>('xx');
+        const o1: Result<boolean, number> = o.ifFail(_ => false);
+        assert.strictEqual(o1.error.orNull(), false);
+        const o2: Result<string, number> = o.ifFail(_ => undefined);
+        assert.strictEqual(o2.error.orNull(), 'xx');
+        const o3: Result<string, number> = o.ifFail(sideEffect);
+        assert.strictEqual(o3.error.orNull(), 'xx');
+    });
+
     it('map & chain', () => {
         const r = Result.ok(5);
         assert.ok(r.map(n => `five ${n}`).value.orNull() === 'five 5');

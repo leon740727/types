@@ -1,4 +1,5 @@
 import { Optional } from './index';
+import * as util from './util';
 
 export interface Result <E, T> {
     readonly ok: boolean;
@@ -7,13 +8,16 @@ export interface Result <E, T> {
     readonly value: Optional<T>;
     readonly error: Optional<E>;
 
+    map (fn: (value: T) => undefined | void): Result<E, T>;
     map <T2> (fn: (value: T) => T2): Result <E, T2>;
 
     chain <E2, T2> (fn: (value: T) => Result<E2, T2>): Result<E|E2, T2>;
 
     /** alias of map() */
+    ifOk (fn: (value: T) => undefined | void): Result<E, T>;
     ifOk <T2> (fn: (value: T) => T2): Result <E, T2>;
 
+    ifFail (fn: (error: E) => undefined | void): Result<E, T>;
     ifFail <E2> (fn: (error: E) => E2): Result<E2, T>;
 
     either <R> (errorHandler: (error: E) => R, valueHandler: (value: T) => R): R;
@@ -80,15 +84,15 @@ class Ok <E, T> implements Result <E, T> {
         return Optional.empty<E>();
     }
 
-    map <T2> (fn: (value: T) => T2): Result <E, T2> {
-        return new Ok(fn(this._value));
+    map <T2> (fn: (value: T) => T2) {
+        return new Ok<E, T | T2>(util.wrap(fn)(this._value));
     }
 
     chain <E2, T2> (fn: (value: T) => Result<E2, T2>): Result<E|E2, T2> {
         return fn(this._value);
     }
 
-    ifOk <T2> (fn: (value: T) => T2): Result <E, T2> {
+    ifOk <T2> (fn: (value: T) => T2) {
         return this.map(fn);
     }
 
@@ -144,13 +148,13 @@ class Fail <E, T> implements Result<E, T> {
         return this.map(fn);
     }
 
-    ifFail <E2> (fn: (error: E) => E2): Result<E2, T> {
-        const e2 = fn(this._error);
+    ifFail <E2> (fn: (error: E) => E2) {
+        const e2 = util.wrap(fn)(this._error);
         if (e2 === null) {
             // newError 不能是 null，因為這會改變 Result 的狀態，但卻沒有明確指定一個 right value 給 right Result
             throw new Error('function argument in Result.ifFail() could not return null');
         }
-        return new Fail(e2);
+        return new Fail<E|E2, T>(e2);
     }
 
     either <R> (errorHandler: (error: E) => R, valueHandler: (value: T) => R): R {
