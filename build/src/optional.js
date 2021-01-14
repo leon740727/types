@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Optional = void 0;
 const result_1 = require("./result");
+const util = require("./util");
 class Optional {
     constructor(value) {
         this.value = value;
@@ -44,10 +45,16 @@ class Optional {
         }
     }
     map(fn) {
+        // 有時 map() 的目的僅是利用其副作用，例如要 console.log，但卻可能不小心改變了其值
+        // 為了防止這種意外，轉換函式 fn 如果沒有傳回值 (undefined)，其內容不會被轉換
         const value = this.orNull();
-        return value === null ? Optional.empty() : Optional.of(fn(value));
+        if (value === null) {
+            return Optional.empty();
+        }
+        else {
+            return Optional.of(util.wrap(fn)(value));
+        }
     }
-    /** alias of Optional.map() */
     ifPresent(fn) {
         // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
         // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼

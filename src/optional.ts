@@ -1,4 +1,5 @@
 import { Result } from './result';
+import * as util from './util';
 
 export class Optional<T> {
 
@@ -48,13 +49,23 @@ export class Optional<T> {
         }
     }
 
-    map <T2> (fn: (value: T) => T2): Optional<T2> {
+    map (fn: (value: T) => null | undefined | void): Optional<T>;
+    map <T2> (fn: (value: T) => T2): Optional<T2>;
+    map <T2> (fn: (value: T) => T2) {
+        // 有時 map() 的目的僅是利用其副作用，例如要 console.log，但卻可能不小心改變了其值
+        // 為了防止這種意外，轉換函式 fn 如果沒有傳回值 (undefined)，其內容不會被轉換
         const value = this.orNull();
-        return value === null ? Optional.empty() : Optional.of(fn(value));
+        if (value === null) {
+            return Optional.empty<T2>();
+        } else {
+            return Optional.of(util.wrap(fn)(value));
+        }
     }
 
     /** alias of Optional.map() */
-    ifPresent <T2> (fn: (value: T) => T2): Optional<T2> {
+    ifPresent (fn: (value: T) => null | undefined | void): Optional<T>;
+    ifPresent <T2> (fn: (value: T) => T2): Optional<T2>;
+    ifPresent <T2> (fn: (value: T) => T2) {
         // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
         // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼
         return this.map(fn);
