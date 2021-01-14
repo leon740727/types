@@ -1,82 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.liftA4 = exports.liftA3 = exports.liftA2 = exports.PromiseResult = exports.PromiseOptional = exports.IO = exports.List = exports.Optional = exports.Result = void 0;
+exports.liftA4 = exports.liftA3 = exports.liftA2 = exports.PromiseResult = exports.PromiseOptional = exports.IO = exports.List = exports.Result = exports.Optional = void 0;
+const optional_1 = require("./optional");
+var optional_2 = require("./optional");
+Object.defineProperty(exports, "Optional", { enumerable: true, get: function () { return optional_2.Optional; } });
 const result_1 = require("./result");
 var result_2 = require("./result");
 Object.defineProperty(exports, "Result", { enumerable: true, get: function () { return result_2.Result; } });
-function zip(a, b) {
-    let results = [];
-    const len = Math.min(a.length, b.length);
-    let idx = 0;
-    while (idx < len) {
-        results[idx] = [a[idx], b[idx]];
-        idx += 1;
-    }
-    return results;
-}
-class Optional {
-    constructor(value) {
-        this.value = value;
-    }
-    static of(v) {
-        return new Optional(v);
-    }
-    static empty() {
-        return new Optional(null);
-    }
-    get present() {
-        return this.value !== null && this.value !== undefined;
-    }
-    orElse(others) {
-        return this.present ? this.value : others;
-    }
-    orNull() {
-        return this.present ? this.value : null;
-    }
-    orExec(func) {
-        // 無論 Optional 是否有值，orElse 裡面的表達式都會被求值
-        // 例如: doc.orElse(loadDefault()) 不論 doc 是否有值，loadDefault 都會執行
-        // 如果不希望 orElse 裡面的表達式被無謂求值，就用 orExec
-        return this.present ? this.value : func();
-    }
-    orFail(error) {
-        return this.present ? result_1.Result.ok(this.value) : result_1.Result.fail(error);
-    }
-    /** get value or throw an error */
-    orError(error) {
-        if (this.present) {
-            return this.value;
-        }
-        else {
-            throw error;
-        }
-    }
-    map(f) {
-        return this.present ? Optional.of(f(this.value)) : Optional.empty();
-    }
-    /** alias of Optional.map() */
-    ifPresent(f) {
-        // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼
-        return this.map(f);
-    }
-    chain(f) {
-        return this.present ? f(this.value) : Optional.empty();
-    }
-    static all(values) {
-        const results = Optional.filter(values);
-        return results.length === values.length ? Optional.of(results) : Optional.empty();
-    }
-    static filter(list) {
-        return list.filter(i => i.present).map(i => i.orNull());
-    }
-    static fetchFilter(list, fetch) {
-        return zip(list, list.map(fetch).map(prop => prop.orNull()))
-            .filter(([item, prop]) => prop !== null)
-            .map(([item, prop]) => ({ data: prop, src: item }));
-    }
-}
-exports.Optional = Optional;
 class List extends Array {
     /* https://stackoverflow.com/questions/14000645/how-to-extend-native-javascript-array-in-typescript */
     static of(...data) {
@@ -120,7 +50,7 @@ class PromiseOptional {
         this.data = data;
     }
     static make(data) {
-        if (data instanceof Optional) {
+        if (data instanceof optional_1.Optional) {
             return new PromiseOptional(Promise.resolve(data));
         }
         else {
@@ -141,7 +71,7 @@ class PromiseOptional {
             }
         }
         let res = this.data.then(d => d.map(mapper)
-            .orElse(Promise.resolve(Optional.empty())));
+            .orElse(Promise.resolve(optional_1.Optional.empty())));
         return new PromiseOptional(res);
     }
     orElse(other) {

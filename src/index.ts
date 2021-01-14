@@ -1,106 +1,10 @@
+import { Optional } from './optional';
+export { Optional } from './optional';
 import { Result } from './result';
 export { Result } from './result';
 
 export type Primitive = string | number | boolean;
 export type Json = Primitive | Primitive[] | {[field: string]: Json} | {[field: string]: Json}[];
-
-function zip <T, S> (a: T[], b: S[]): [T, S][] {
-    let results: [T, S][] = [];
-    const len = Math.min(a.length, b.length);
-    let idx = 0;
-    while (idx < len) {
-        results[idx] = [a[idx], b[idx]];
-        idx += 1;
-    }
-    return results;
-}
-
-export class Optional<T> {
-
-    constructor (private value: T | null | undefined) {}
-
-    static of <T> (v: T | null | undefined) {
-        return new Optional<T>(v);
-    }
-
-    static empty <T> (): Optional<T> {
-        return new Optional<T>(null);
-    }
-
-    get present() {
-        return this.value !== null && this.value !== undefined;
-    }
-
-    orElse (others: T): T {
-        return this.present ? this.value as T : others;
-    }
-
-    orNull () {
-        return this.present ? this.value as T : null;
-    }
-
-    orExec (func: () => T) {
-        // 無論 Optional 是否有值，orElse 裡面的表達式都會被求值
-        // 例如: doc.orElse(loadDefault()) 不論 doc 是否有值，loadDefault 都會執行
-        // 如果不希望 orElse 裡面的表達式被無謂求值，就用 orExec
-        return this.present ? this.value : func();
-    }
-
-    orFail <E> (error: E): Result<E, T> {
-        return this.present ? Result.ok(this.value as T) : Result.fail(error);
-    }
-
-    /** get value or throw an error */
-    orError <E> (error: E): T {
-        if (this.present) {
-            return this.value as T;
-        } else {
-            throw error;
-        }
-    }
-
-    map <R> (f: (a: T) => R): Optional<R> {
-        return this.present ? Optional.of(f(this.value as T)) : Optional.empty();
-    }
-
-    /** alias of Optional.map() */
-    ifPresent <R> (f: (a: T) => R): Optional<R> {
-        // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
-        // 讓使用者不用再寫 if (xxx.present) { xxx.orError('xxx') } 的程式碼
-        return this.map(f);
-    }
-    
-    chain <R> (f: (a: T) => Optional<R>): Optional<R> {
-        return this.present ? f(this.value as T) : Optional.empty();
-    }
-
-    static all <T1, T2> (values: [Optional<T1>, Optional<T2>]): Optional<[T1, T2]>;
-    static all <T1, T2, T3> (values: [Optional<T1>, Optional<T2>, Optional<T3>]): Optional<[T1, T2, T3]>;
-    static all <T1, T2, T3, T4> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>]): Optional<[T1, T2, T3, T4]>;
-    static all <T1, T2, T3, T4, T5> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>]): Optional<[T1, T2, T3, T4, T5]>;
-    static all <T1, T2, T3, T4, T5, T6> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>]): Optional<[T1, T2, T3, T4, T5, T6]>;
-    static all <T1, T2, T3, T4, T5, T6, T7> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>]): Optional<[T1, T2, T3, T4, T5, T6, T7]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
-    static all <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> (values: [Optional<T1>, Optional<T2>, Optional<T3>, Optional<T4>, Optional<T5>, Optional<T6>, Optional<T7>, Optional<T8>, Optional<T9>, Optional<T10>]): Optional<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
-    static all <T> (values: Optional<T>[]): Optional<T[]>;
-    static all (values: Optional<any>[]) {
-        const results = Optional.filter(values);
-        return results.length === values.length ? Optional.of(results) : Optional.empty();
-    }
-
-    static filter <T> (list: Optional<T>[]): T[] {
-        return list.filter(i => i.present).map(i => i.orNull() as T);
-    }
-
-    static fetchFilter <T, S> (list: T[], fetch: (item: T) => Optional<S>): {data: S, src: T}[] {
-        return zip(
-            list,
-            list.map(fetch).map(prop => prop.orNull()))
-        .filter(([item, prop]) => prop !== null)
-        .map(([item, prop]) => ({data: prop as S, src: item}));
-    }
-}
 
 export class List <T> extends Array <T> {
     /* https://stackoverflow.com/questions/14000645/how-to-extend-native-javascript-array-in-typescript */
@@ -247,6 +151,7 @@ function _arity(n, fn) {
         default: throw new Error('First argument to _arity must be a non-negative integer no greater than ten');
     }
 };
+
 function curry(func: (...args)=>any) {
     return (...args) => {
         if (args.length >= func.length) {
