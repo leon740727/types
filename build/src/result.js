@@ -101,7 +101,7 @@ class Fail {
         const e2 = fn(this._error);
         if (e2 === null) {
             // newError 不能是 null，因為這會改變 Result 的狀態，但卻沒有明確指定一個 right value 給 right Result
-            throw new Error('function argument in Result.ifError() could not return null');
+            throw new Error('function argument in Result.ifFail() could not return null');
         }
         return new Fail(e2);
     }
