@@ -4,13 +4,13 @@ export interface Result<E, T> {
     readonly fail: boolean;
     readonly value: Optional<T>;
     readonly error: Optional<E>;
-    map(fn: (value: T) => undefined | void): Result<E, T>;
+    map(fn: (value: T) => undefined | void | T): Result<E, T>;
     map<T2>(fn: (value: T) => T2): Result<E, T2>;
     chain<E2, T2>(fn: (value: T) => Result<E2, T2>): Result<E | E2, T2>;
     /** alias of map() */
-    ifOk(fn: (value: T) => undefined | void): Result<E, T>;
+    ifOk(fn: (value: T) => undefined | void | T): Result<E, T>;
     ifOk<T2>(fn: (value: T) => T2): Result<E, T2>;
-    ifFail(fn: (error: E) => undefined | void): Result<E, T>;
+    ifFail(fn: (error: E) => undefined | void | T): Result<E, T>;
     ifFail<E2>(fn: (error: E) => E2): Result<E2, T>;
     either<R>(errorHandler: (error: E) => R, valueHandler: (value: T) => R): R;
     orElse(others: T): T;

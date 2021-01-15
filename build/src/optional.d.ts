@@ -11,10 +11,10 @@ export declare class Optional<T> {
     orFail<E>(error: E): Result<E, T>;
     /** get value or throw an error */
     orError<E>(error: E): T;
-    map(fn: (value: T) => null | undefined | void): Optional<T>;
+    map(fn: (value: T) => null | undefined | void | T): Optional<T>;
     map<T2>(fn: (value: T) => T2): Optional<T2>;
     /** alias of Optional.map() */
-    ifPresent(fn: (value: T) => null | undefined | void): Optional<T>;
+    ifPresent(fn: (value: T) => null | undefined | void | T): Optional<T>;
     ifPresent<T2>(fn: (value: T) => T2): Optional<T2>;
     chain<T2>(fn: (value: T) => Optional<T2>): Optional<T2>;
     static filter<T>(list: Optional<T>[]): T[];

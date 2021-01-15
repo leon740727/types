@@ -68,7 +68,7 @@ describe('result', () => {
         }
 
         const o = Result.ok<string, number>(5);
-        const o1 = o.map(_ => true);
+        const o1: Result<string, boolean> = o.map(_ => true);
         assert.strictEqual(o1.orError(), true);
         const o2: Result<string, null> = o.map(_ => null);
         assert.strictEqual(o2.orError(), null);
