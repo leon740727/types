@@ -90,6 +90,11 @@ describe('result', () => {
         assert.ok(r.map(n => `five ${n}`).value.orNull() === 'five 5');
         assert.ok(r.chain(n => index_1.Result.ok(`five ${n}`)).value.orNull() === 'five 5');
     });
+    it('chain 的過程中產生另一種 error type', () => {
+        const r = index_1.Result.ok(5)
+            .chain(_ => index_1.Result.fail('6'));
+        assert.strictEqual(r.error.orError(''), '6');
+    });
     it('orElse helper', () => {
         assert.ok(index_1.Result.ok(5).orElse(0) === 5);
         assert.ok(index_1.Result.fail('').orElse(0) === 0);

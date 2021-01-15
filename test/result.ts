@@ -110,6 +110,12 @@ describe('result', () => {
         assert.ok(r.chain(n => Result.ok(`five ${n}`)).value.orNull() === 'five 5');
     });
 
+    it('chain 的過程中產生另一種 error type', () => {
+        const r = Result.ok<number, number>(5)
+        .chain(_ => Result.fail<string, number>('6'));
+        assert.strictEqual(r.error.orError(''), '6');
+    });
+
     it('orElse helper', () => {
         assert.ok(Result.ok(5).orElse(0) === 5);
         assert.ok(Result.fail<string, number>('').orElse(0) === 0);
