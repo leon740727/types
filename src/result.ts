@@ -115,7 +115,7 @@ class Ok <E, T> implements Result <E, T> {
 
 class Fail <E, T> implements Result<E, T> {
     constructor (private _error: E) {
-        if (this._error === null) {
+        if (this._error === null || this._error === undefined) {
             throw new Error('error value in Result.fail(error) could not be null');
         }
     }

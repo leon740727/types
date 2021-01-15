@@ -22,8 +22,12 @@ describe('result', () => {
         assert.ok(r.value.chain(v => v).orNull() === 5);
     });
 
-    it('Result<e, null>', () => {
+    it('Result.value 可以是 null 或 undefined>', () => {
         const r = Result.ok(null);
+        assert.ok(r.ok === true);
+        assert.ok(r.value.present === false);
+
+        const r2 = Result.ok(undefined);
         assert.ok(r.ok === true);
         assert.ok(r.value.present === false);
     });
@@ -50,9 +54,12 @@ describe('result', () => {
         }
     });
 
-    it('Result.fail(null)', () => {
+    it('Result.fail(null | undefined)', () => {
         assert.throws(
             () => Result.fail<string, number>(null as any),
+            { message: 'error value in Result.fail(error) could not be null' });
+        assert.throws(
+            () => Result.fail<string, number>(undefined as any),
             { message: 'error value in Result.fail(error) could not be null' });
     });
 

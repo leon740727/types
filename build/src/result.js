@@ -73,7 +73,7 @@ class Ok {
 class Fail {
     constructor(_error) {
         this._error = _error;
-        if (this._error === null) {
+        if (this._error === null || this._error === undefined) {
             throw new Error('error value in Result.fail(error) could not be null');
         }
     }
