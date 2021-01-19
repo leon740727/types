@@ -11,3 +11,7 @@ export function wrap <T, T2> (fn: (value: T) => T2) {
         }
     };
 }
+
+export class _Never {
+    constructor (private v = '') { throw 'never' }
+}

@@ -49,7 +49,7 @@ export class Optional<T> {
         }
     }
 
-    map (fn: (value: T) => null | undefined | void | T): Optional<T>;
+    map (fn: (value: T) => null | undefined | void | util._Never): Optional<T>;
     map <T2> (fn: (value: T) => T2): Optional<T2>;
     map <T2> (fn: (value: T) => T2) {
         // 有時 map() 的目的僅是利用其副作用，例如要 console.log，但卻可能不小心改變了其值
@@ -63,7 +63,7 @@ export class Optional<T> {
     }
 
     /** alias of Optional.map() */
-    ifPresent (fn: (value: T) => null | undefined | void | T): Optional<T>;
+    ifPresent (fn: (value: T) => null | undefined | void | util._Never): Optional<T>;
     ifPresent <T2> (fn: (value: T) => T2): Optional<T2>;
     ifPresent <T2> (fn: (value: T) => T2) {
         // something.ifPresent 跟 something.map 的作用一樣，但提供比較清楚的語意
