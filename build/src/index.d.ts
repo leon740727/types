@@ -2,7 +2,7 @@ import { Optional } from './optional';
 export { Optional } from './optional';
 import { Result } from './result';
 export { Result } from './result';
-export declare type Primitive = string | number | boolean;
+export declare type Primitive = string | number | boolean | null;
 export declare type Json = Primitive | Primitive[] | {
     [field: string]: Json;
 } | {

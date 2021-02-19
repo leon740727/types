@@ -3,7 +3,7 @@ export { Optional } from './optional';
 import { Result } from './result';
 export { Result } from './result';
 
-export type Primitive = string | number | boolean;
+export type Primitive = string | number | boolean | null;
 export type Json = Primitive | Primitive[] | {[field: string]: Json} | {[field: string]: Json}[];
 
 export class List <T> extends Array <T> {
